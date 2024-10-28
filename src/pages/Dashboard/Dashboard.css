@@ -1,0 +1,113 @@
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 16px;
+}
+
+.dashboard-row {
+    display: flex;
+    width: 100%;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.dashboard-card {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+}
+
+.dashboard-card-header {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.dashboard-card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.dashboard-card-header small {
+    display: block;
+    margin-top: 4px;
+    color: #6c757d;
+}
+
+.dashboard-card-body {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.dashboard-card-values {
+    display: flex;
+    align-items: flex-start;
+    margin-right: 16px;
+}
+
+.dashboard-card-values h3 {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.dashboard-card-values h4 {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding-top: 15px;
+    padding-left: 15px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: red;
+}
+
+.dashboard-card-footer {
+    display: flex; 
+    width: 100%;
+    margin-top: 16px;
+    font-size: 0.875rem;
+}
+
+.dashboard-card-footer span.valor {
+    display: flex;
+    flex-direction: column;
+    display: block;
+    color: green;
+}
+
+.dashboard-card-footer span {
+    display: flex;
+    flex-direction: column;
+    display: block;
+    color: rgb(44, 44, 44);
+}
+
+.dashboard-table{    
+    width: 100%;
+}
+
+.dashboard-table thead{    
+    width: 100%; 
+    background-color: #dedede;
+    border-bottom: 1px solid #ccc;
+} 
+.dashboard-table thead tr th{    
+    width: 100%;
+    height: 90; 
+    font-size: 10px;
+    padding: 5px;
+}
