@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { configureStore } from '@reduxjs/toolkit';
 import { rootReducer } from './toolkit/index.ts';
 import authReducer from './toolkit/authSlice';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const store = configureStore({
   reducer: rootReducer,

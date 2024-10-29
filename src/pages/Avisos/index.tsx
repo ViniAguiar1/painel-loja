@@ -7,7 +7,7 @@ import ptBR from "date-fns/locale/pt-BR";
 import BreadcrumbItem from "../../Common/BreadcrumbItem";
 
 const PageContainer = styled.div`
-    background-color: #f7f8fa;
+    // background-color: #f7f8fa;
     min-height: 100vh;
     padding: 20px;
 `;

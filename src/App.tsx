@@ -2,6 +2,7 @@ import { createSelector } from '@reduxjs/toolkit';
 import Routing from './Routes'
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
 

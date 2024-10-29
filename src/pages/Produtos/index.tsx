@@ -5,7 +5,7 @@ import { FiEdit, FiTrash } from "react-icons/fi";
 import { FiFilter } from "react-icons/fi";
 
 const PageContainer = styled.div`
-    background-color: #f7f8fa;
+    // background-color: #f7f8fa;
     min-height: 100vh;
     padding: 20px;
 `;
@@ -169,7 +169,7 @@ const ProdutosPage = () => {
         quantidade: Math.floor(Math.random() * 500),
         alerta: Math.floor(Math.random() * 100),
         localizacao: "São Paulo",
-        imagem: "https://via.placeholder.com/40?text=T-shirt",
+        imagem: "https://acdn.mitiendanube.com/stores/002/044/094/products/4d5ca6981-39a02113e646635a4516624042395202-640-0.jpg",
         publicado: index % 2 === 0 // Mock para definir alguns produtos como publicados
     }));
 

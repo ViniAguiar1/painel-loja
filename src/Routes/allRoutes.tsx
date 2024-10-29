@@ -22,6 +22,8 @@ import UnderConstruction from "../pages/Pages/UnderConstruction";
 import ComingSoon from "../pages/Pages/ComingSoon";
 import OthersRequest from "../pages/Pedidos/othersRequest";
 import ClientDetails from "../pages/Clientes/ClientDetails";
+import AddCategorie from "../pages/Categorias/AddCategorie";
+import path from "path";
 
 const routes = [
 
@@ -37,6 +39,7 @@ const routes = [
     { path: "/configuracoes", component: <Configuracoes /> },
     { path: "/others-request", component: <OthersRequest /> },
     { path: "/client-details/:id", component: <ClientDetails /> }, // Adicionar a rota para ClientDetails
+    { path: "/add-categorie", component: <AddCategorie /> }
     
 ];
 
