@@ -13,8 +13,7 @@ const FooterBlock = () => {
                 <hr className="mb-3 mt-4" />
                 <Row>
                     <Col className="my-1">
-                        <p className="m-0">Made with &#9829; by Team
-                            <Link to="https://themeforest.net/user/phoenixcoded" target="_blank"> Phoenixcoded</Link></p>
+                        <p className="m-0">Produced by Easytogo</p>
                     </Col>
                     <div className="col-auto my-1">
                         <ul className="list-inline footer-link mb-0">
