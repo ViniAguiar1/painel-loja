@@ -46,6 +46,7 @@
     "chart.js": "^4.4.3",
     "cleave.js": "^1.6.0",
     "clipboard": "^2.0.11",
+    "date-fns": "^4.1.0",
     "datepicker.js": "^0.0.1-beta1",
     "feather-icons": "^4.29.1",
     "feather-icons-react": "^0.7.0",

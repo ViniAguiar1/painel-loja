@@ -3283,6 +3283,11 @@
   "resolved" "https://registry.npmjs.org/date-fns/-/date-fns-3.6.0.tgz"
   "version" "3.6.0"
 
+"date-fns@^4.1.0":
+  "integrity" "sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg=="
+  "resolved" "https://registry.npmjs.org/date-fns/-/date-fns-4.1.0.tgz"
+  "version" "4.1.0"
+
 "datepicker.js@^0.0.1-beta1":
   "integrity" "sha512-z58CQt72Nie9iaS8n6M/0SE3Wndg+rDxiRnplwWUN6BKjwXDyLbWAlGlUk3YyvkSmEQvpPdkMDP0bofLClA+Kw=="
   "resolved" "https://registry.npmjs.org/datepicker.js/-/datepicker.js-0.0.1-beta1.tgz"
