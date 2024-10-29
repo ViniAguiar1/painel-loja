@@ -25,6 +25,13 @@ const menuItems = [
     link: "/clientes",
   },
   {
+    type: "HASHMENU",
+    id: "staff",
+    label: "Staff",
+    icon: "ph-duotone ph-users",
+    link: "/staff",
+  },
+  {
     label: "PRODUTOS",
     type: "HEADER",
   },

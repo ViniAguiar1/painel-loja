@@ -1,6 +1,7 @@
 import Dashboard from "../pages/Dashboard";
-import Avisos from "../pages/Avisos";
 import Pedidos from "../pages/Pedidos";
+import Avisos from "../pages/Avisos";
+import Staff from "../pages/Staff";
 import Clientes from "../pages/Clientes";
 import Produtos from "../pages/Produtos";
 import Fretes from "../pages/Fretes"
@@ -29,6 +30,7 @@ const routes = [
 
     { path: "/", component: <Dashboard /> },
     { path: "/avisos", component: <Avisos /> },
+    { path: "/staff", component: <Staff />},
     { path: "/pedidos", component: <Pedidos /> },
     { path: "/clientes", component: <Clientes /> },
     { path: "/produtos", component: <Produtos /> },
