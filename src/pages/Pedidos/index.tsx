@@ -38,13 +38,21 @@ const PedidosPage: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch('/pedidos.json')
-            .then(response => response.json())
-            .then((data: Pedido[]) => {
-                setData(data);
-                setFilteredData(data);
-            });
+        const token = localStorage.getItem('token');
+    
+        fetch("https://api.spartacusprimetobacco.com.br/api/carrinhos", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        .then(response => response.json())
+        .then((data: Pedido[]) => {
+            setData(data);
+            setFilteredData(data);
+        })
+        .catch(error => console.error("Erro ao buscar pedidos:", error));
     }, []);
+    
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);

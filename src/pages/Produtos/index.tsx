@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import BreadcrumbItem from "../../Common/BreadcrumbItem";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { FiFilter } from "react-icons/fi";
+import Swal from "sweetalert2";
+
 
 const PageContainer = styled.div`
     // background-color: #f7f8fa;
@@ -162,22 +164,40 @@ const PaginationButton = styled.button`
 `;
 
 const ProdutosPage = () => {
-    const produtosMock = Array.from({ length: 30 }, (_, index) => ({
-        id: index + 1,
-        nome: `Nome do produto ${index + 1}`,
-        custo: (Math.random() * 20 + 5).toFixed(2),
-        quantidade: Math.floor(Math.random() * 500),
-        alerta: Math.floor(Math.random() * 100),
-        localizacao: "São Paulo",
-        imagem: "https://acdn.mitiendanube.com/stores/002/044/094/products/4d5ca6981-39a02113e646635a4516624042395202-640-0.jpg",
-        publicado: index % 2 === 0 // Mock para definir alguns produtos como publicados
-    }));
-
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [searchTerm, setSearchTerm] = useState("");
     const [activeFilter, setActiveFilter] = useState("todos");
     const [selectedProducts, setSelectedProducts] = useState([]);
+    const [produtos, setProdutos] = useState([]);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+    
+        fetch("https://api.spartacusprimetobacco.com.br/api/produtos", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const mappedProdutos = data.map(produto => ({
+                id: produto.codigoPRODUTO,
+                nome: produto.nomePRODUTO,
+                custo: parseFloat(produto.precoPRODUTO).toFixed(2),
+                quantidade: parseInt(produto.quantidadePRODUTO),
+                alerta: produto.alertaPRODUTO,
+                localizacao: "São Paulo", // Substitua conforme necessário
+                imagem: produto.imagemPRODUTO,
+                publicado: produto.ativoPRODUTO === 1,
+            }));
+            setProdutos(mappedProdutos);
+        })
+        .catch(error => console.error("Erro ao buscar produtos:", error));
+    }, []);
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
@@ -208,7 +228,7 @@ const ProdutosPage = () => {
         );
     };
 
-    const filteredProducts = produtosMock.filter((produto) => {
+    const filteredProducts = produtos.filter((produto) => {
         if (activeFilter === "publicados" && !produto.publicado) return false;
         if (activeFilter === "baixo-estoque" && produto.quantidade > 50) return false;
         if (activeFilter === "rascunho" && produto.publicado) return false;
@@ -216,6 +236,96 @@ const ProdutosPage = () => {
         return true;
     });
 
+    const handleEdit = (produto) => {
+        setProdutoSelecionado(produto);
+        setShowEditModal(true);
+    };
+
+    const handleSaveChanges = () => {
+        const token = localStorage.getItem("token");
+    
+        fetch(`https://api.spartacusprimetobacco.com.br/api/produtos/${produtoSelecionado.id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                skuPRODUTO: produtoSelecionado.sku,
+                nomePRODUTO: produtoSelecionado.nome,
+                descricaoPRODUTO: produtoSelecionado.descricao,
+                precoPRODUTO: produtoSelecionado.custo,
+                quantidadePRODUTO: produtoSelecionado.quantidade,
+                alertaPRODUTO: produtoSelecionado.alerta,
+                categoriaPRODUTO: produtoSelecionado.categoria,
+                localizacaoPRODUTO: produtoSelecionado.localizacao,
+                imagemPRODUTO: produtoSelecionado.imagem,
+                tipoPRODUTO: produtoSelecionado.tipo,
+                acessoPRODUTO: produtoSelecionado.acesso,
+                ativoPRODUTO: produtoSelecionado.publicado,
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                setShowEditModal(false);
+                // Atualize o estado dos produtos aqui se necessário
+            } else {
+                console.error("Erro ao atualizar o produto");
+            }
+        })
+        .catch(error => console.error("Erro ao salvar alterações:", error));
+    };
+    
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProdutoSelecionado({ ...produtoSelecionado, imagem: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };   
+    
+    const handleDelete = (id) => {
+        const token = localStorage.getItem("token");
+    
+        Swal.fire({
+            title: 'Você tem certeza?',
+            text: "Essa ação não pode ser desfeita!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sim, excluir!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`https://api.spartacusprimetobacco.com.br/api/produtos/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        setProdutos(prevProdutos => prevProdutos.filter(produto => produto.id !== id));
+                        Swal.fire(
+                            'Excluído!',
+                            'O produto foi excluído com sucesso.',
+                            'success'
+                        );
+                    } else {
+                        Swal.fire('Erro!', 'Não foi possível excluir o produto.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao realizar a exclusão:", error);
+                    Swal.fire('Erro!', 'Ocorreu um erro ao excluir o produto.', 'error');
+                });
+            }
+        });
+    };    
+    
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
@@ -224,6 +334,123 @@ const ProdutosPage = () => {
 
     return (
         <PageContainer>
+        {showEditModal && (
+    <div style={{
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: "1000",
+        padding: "20px"
+    }}>
+        <div style={{
+            backgroundColor: "#fff",
+            padding: "20px",
+            borderRadius: "8px",
+            width: "500px",
+            maxHeight: "80vh",
+            overflowY: "auto",
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.2)",
+            marginTop: "40px"
+        }}>
+            <h2 style={{ marginBottom: "20px" }}>Editar Produto</h2>
+            <label>Nome do Produto</label>
+            <input
+                type="text"
+                value={produtoSelecionado?.nome || ""}
+                onChange={(e) => setProdutoSelecionado({ ...produtoSelecionado, nome: e.target.value })}
+                style={{
+                    width: "100%",
+                    marginBottom: "10px",
+                    padding: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    outline: "none",
+                    transition: "border-color 0.3s",
+                }}
+                onFocus={(e) => e.target.style.borderColor = "#4f46e5"}
+                onBlur={(e) => e.target.style.borderColor = "#ddd"}
+            />
+            <label>Preço</label>
+            <input
+                type="text"
+                value={produtoSelecionado?.custo || ""}
+                onChange={(e) => setProdutoSelecionado({ ...produtoSelecionado, custo: e.target.value })}
+                style={{
+                    width: "100%",
+                    marginBottom: "10px",
+                    padding: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    outline: "none",
+                    transition: "border-color 0.3s",
+                }}
+                onFocus={(e) => e.target.style.borderColor = "#4f46e5"}
+                onBlur={(e) => e.target.style.borderColor = "#ddd"}
+            />
+            <label>Quantidade</label>
+            <input
+                type="text"
+                value={produtoSelecionado?.quantidade || ""}
+                onChange={(e) => setProdutoSelecionado({ ...produtoSelecionado, quantidade: e.target.value })}
+                style={{
+                    width: "100%",
+                    marginBottom: "10px",
+                    padding: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    outline: "none",
+                    transition: "border-color 0.3s",
+                }}
+                onFocus={(e) => e.target.style.borderColor = "#4f46e5"}
+                onBlur={(e) => e.target.style.borderColor = "#ddd"}
+            />
+            <label>Imagem do Produto</label>
+            <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "10px" }}>
+                <div style={{ position: "relative" }}>
+                    <input 
+                        type="file" 
+                        onChange={handleImageChange} 
+                        style={{
+                            position: "absolute",
+                            opacity: 0,
+                            width: "100%",
+                            height: "100%",
+                            cursor: "pointer"
+                        }} 
+                    />
+                    <button style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#4f46e5",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontSize: "14px"
+                    }}>
+                        Escolher arquivo
+                    </button>
+                </div>
+                {produtoSelecionado?.imagem && (
+                    <img src={produtoSelecionado.imagem} alt="Preview" style={{ width: "100%", maxWidth: "150px", borderRadius: "8px" }} />
+                )}
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "20px" }}>
+                <button onClick={() => setShowEditModal(false)} style={{ padding: "8px 16px", backgroundColor: "#f1f1f1", border: "none", borderRadius: "4px", cursor: "pointer" }}>Cancelar</button>
+                <button onClick={handleSaveChanges} style={{ padding: "8px 16px", backgroundColor: "#D02626", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}>Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+)}
+
             <BreadcrumbItem mainTitle="" subTitle="Produtos" />
             <Container>
                 <FilterContainer>
@@ -292,12 +519,13 @@ const ProdutosPage = () => {
                                 <Td>{produto.alerta}</Td>
                                 <Td>{produto.localizacao}</Td>
                                 <Td>
-                                    <ActionButton>
+                                <ActionButton onClick={() => handleEdit(produto)}>
                                         <FiEdit />
                                     </ActionButton>
-                                    <ActionButton>
-                                        <FiTrash />
-                                    </ActionButton>
+                                    <ActionButton onClick={() => handleDelete(produto.id)}>
+    <FiTrash />
+</ActionButton>
+
                                 </Td>
                             </Tr>
                         ))}

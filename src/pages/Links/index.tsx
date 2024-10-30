@@ -157,7 +157,8 @@ const AddButton = styled.button`
 const LinksPage = () => {
     const initialLinks = Array.from({ length: 10 }, (_, i) => ({
         id: i + 1,
-        name: `Link ${i + 1}`
+        name: `Link ${i + 1}`,
+        date: `01/02/2024 15:30`,
     }));
 
     const [links, setLinks] = useState(initialLinks);
@@ -256,29 +257,31 @@ const LinksPage = () => {
                     <NewLinkButton onClick={() => openModal()}>+ Novo Link</NewLinkButton>
                 </div>
                 <LinksTable>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Nome</TableCell>
-                            <TableCell>Ação</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <tbody>
-                        {paginatedLinks.map(link => (
-                            <TableRow key={link.id}>
-                                <TableCell>{link.name}</TableCell>
-                                <TableCell>
-                                    <IconsContainer>
-                                        <IconButton onClick={() => openModal(true, link)}>
-                                            <FiEdit />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleDeleteLink(link.id)}>
-                                            <FiTrash />
-                                        </IconButton>
-                                    </IconsContainer>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </tbody>
+                <TableHead>
+    <TableRow>
+        <TableCell>Nome</TableCell>
+        <TableCell>Data e Hora</TableCell> {/* Nova coluna no cabeçalho */}
+        <TableCell>Ação</TableCell>
+    </TableRow>
+</TableHead>
+<tbody>
+    {paginatedLinks.map(link => (
+        <TableRow key={link.id}>
+            <TableCell>{link.name}</TableCell>
+            <TableCell>{link.date}</TableCell> {/* Exibindo a data e hora */}
+            <TableCell>
+                <IconsContainer>
+                    <IconButton onClick={() => openModal(true, link)}>
+                        <FiEdit />
+                    </IconButton>
+                    <IconButton onClick={() => handleDeleteLink(link.id)}>
+                        <FiTrash />
+                    </IconButton>
+                </IconsContainer>
+            </TableCell>
+        </TableRow>
+    ))}
+</tbody>
                 </LinksTable>
                 <PaginationContainer>
                     <div>Mostrando {paginatedLinks.length} de {filteredLinks.length}</div>

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { FiImage } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { useNavigate } from 'react-router-dom';
 
 const Container = styled.div`
     display: flex;
@@ -173,6 +174,7 @@ const AddCategorie: React.FC = () => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const MySwal = withReactContent(Swal);
+    const navigate = useNavigate();
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -186,23 +188,52 @@ const AddCategorie: React.FC = () => {
     };
 
     const handleAddCategory = () => {
-        const newCategory = { name, description, image };
-        const existingCategories = JSON.parse(localStorage.getItem('categories') || '[]');
-        existingCategories.push(newCategory);
-        localStorage.setItem('categories', JSON.stringify(existingCategories));
+        const token = localStorage.getItem('token');
+        const newCategory = {
+            nomeCATEGORIA: name,
+            imagemCATEGORIA: image,
+            ativoCATEGORIA: true, // Assumindo que a categoria é ativa por padrão
+        };
 
-        MySwal.fire({
-            title: 'Sucesso!',
-            text: 'Categoria adicionada com sucesso!',
-            icon: 'success',
-            confirmButtonColor: '#D02626',
-            confirmButtonText: 'OK'
+        fetch("https://api.spartacusprimetobacco.com.br/api/categorias", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(newCategory)
+        })
+        .then((response) => {
+            if (response.ok) {
+                MySwal.fire({
+                    title: 'Sucesso!',
+                    text: 'Categoria adicionada com sucesso!',
+                    icon: 'success',
+                    confirmButtonColor: '#D02626',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // Redireciona para a página de categorias após adicionar com sucesso
+                    navigate('/categorias');
+                });
+
+                // Resetar os campos após adicionar
+                setName('');
+                setDescription('');
+                setImage(null);
+            } else {
+                throw new Error("Erro ao adicionar a categoria");
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+            MySwal.fire({
+                title: 'Erro',
+                text: 'Não foi possível adicionar a categoria.',
+                icon: 'error',
+                confirmButtonColor: '#D02626',
+                confirmButtonText: 'OK'
+            });
         });
-
-        // Resetar os campos após adicionar
-        setName('');
-        setDescription('');
-        setImage(null);
     };
 
     return (

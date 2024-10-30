@@ -26,6 +26,7 @@ import ClientDetails from "../pages/Clientes/ClientDetails";
 import AddCategorie from "../pages/Categorias/AddCategorie";
 import Despesas from "../pages/Despesas";
 import Saidas from "../pages/Saidas";
+import Envios from "../pages/Envios";
 
 const routes = [
 
@@ -45,6 +46,7 @@ const routes = [
     { path: "/add-categorie", component: <AddCategorie /> },
     { path: "/despesas", component: <Despesas />},
     { path: "/saidas", component: <Saidas />},
+    { path: "/envios", component: <Envios />},
     
 ];
 

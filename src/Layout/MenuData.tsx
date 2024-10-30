@@ -32,16 +32,23 @@ const menuItems = [
     link: "/staff",
   },
   {
+    type: "HASHMENU",
+    id: "truck",
+    label: "Envios",
+    icon: "ph-duotone ph-truck",
+    link: "/envios",
+},
+  {
     label: "PRODUTOS",
     type: "HEADER",
   },
-  {
-    type: "HASHMENU",
-    id: "adicionar-produto",
-    label: "Adicionar Produto",
-    icon: "ph-duotone ph-plus-circle",
-    link: "/adicionar-produto",
-  },
+  // {
+  //   type: "HASHMENU",
+  //   id: "adicionar-produto",
+  //   label: "Adicionar Produto",
+  //   icon: "ph-duotone ph-plus-circle",
+  //   link: "/adicionar-produto",
+  // },
   {
     type: "HASHMENU",
     id: "lista-produtos",
