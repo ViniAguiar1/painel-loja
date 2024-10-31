@@ -9,6 +9,7 @@ import Categorias from "../pages/Categorias";
 import Usuarios from "../pages/Usuarios";
 import Links from "../pages/Links";
 import Configuracoes from "../pages/Configuracoes";
+import AddProduct from "../pages/Produtos/AddProduct";
 
 
 import LoginV1 from "../pages/Pages/Login";
@@ -27,7 +28,6 @@ import AddCategorie from "../pages/Categorias/AddCategorie";
 import Despesas from "../pages/Despesas";
 import Saidas from "../pages/Saidas";
 import Envios from "../pages/Envios";
-
 const routes = [
 
     { path: "/", component: <Dashboard /> },
@@ -47,6 +47,7 @@ const routes = [
     { path: "/despesas", component: <Despesas />},
     { path: "/saidas", component: <Saidas />},
     { path: "/envios", component: <Envios />},
+    { path: "/add-product", component: <AddProduct /> },
     
 ];
 

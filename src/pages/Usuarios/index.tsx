@@ -1,41 +1,156 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import BreadcrumbItem from "../../Common/BreadcrumbItem";
 import { FaEdit, FaTrash, FaLock, FaSearch } from "react-icons/fa";
+import axios from "axios";
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 
-const mockUsers = [
-    { id: 1, name: "Robert Fox", email: "robert@gmail.com", phone: "(11) 98765-3612", lastAccess: "1 Jan 2024" },
-    { id: 2, name: "Jenny Wilson", email: "jenny@gmail.com", phone: "(11) 98765-1234", lastAccess: "1 Jan 2024" },
-    { id: 3, name: "Jacob Jones", email: "jacob@gmail.com", phone: "(11) 98765-4321", lastAccess: "1 Jan 2024" },
-    { id: 4, name: "Kristin Watson", email: "kristin@gmail.com", phone: "(11) 98765-5678", lastAccess: "1 Jan 2024" },
-    { id: 5, name: "Ronald Richards", email: "ronald@gmail.com", phone: "(11) 98765-8765", lastAccess: "1 Jan 2024" },
-    { id: 6, name: "Esther Howard", email: "esther@gmail.com", phone: "(11) 98765-6543", lastAccess: "1 Jan 2024" },
-    { id: 7, name: "Floyd Miles", email: "floyd@gmail.com", phone: "(11) 98765-3456", lastAccess: "1 Jan 2024" },
-    { id: 8, name: "Cameron Williamson", email: "cameron@gmail.com", phone: "(11) 98765-2345", lastAccess: "1 Jan 2024" },
-    { id: 9, name: "Courtney Henry", email: "courtney@gmail.com", phone: "(11) 98765-1234", lastAccess: "1 Jan 2024" },
-    { id: 10, name: "Tom Cook", email: "tom@gmail.com", phone: "(11) 98765-6789", lastAccess: "1 Jan 2024" },
-    { id: 11, name: "Ralph Edwards", email: "ralph@gmail.com", phone: "(11) 98765-8761", lastAccess: "1 Jan 2024" },
-    { id: 12, name: "Albert Flores", email: "albert@gmail.com", phone: "(11) 98765-4321", lastAccess: "1 Jan 2024" },
-    { id: 13, name: "Jane Cooper", email: "jane@gmail.com", phone: "(11) 98765-1234", lastAccess: "1 Jan 2024" },
-    { id: 14, name: "Devon Lane", email: "devon@gmail.com", phone: "(11) 98765-3456", lastAccess: "1 Jan 2024" },
-    { id: 15, name: "Angela Caroll", email: "angela@gmail.com", phone: "(11) 98765-6543", lastAccess: "1 Jan 2024" },
-];
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    lastAccess: string;
+    isActive: boolean;
+}
 
 const UsuariosPage = () => {
+    const [users, setUsers] = useState<User[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const usersPerPage = 10;
     const [searchTerm, setSearchTerm] = useState("");
+    const token = localStorage.getItem("token");
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await axios.get('https://api.spartacusprimetobacco.com.br/api/usuarios', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                const filteredUsers = response.data
+                    .filter((user: any) => user.tipoUSUARIO !== 6)
+                    .map((user: any) => ({
+                        id: user.codigoUSUARIO,
+                        name: user.nomeUSUARIO,
+                        email: user.emailUSUARIO,
+                        phone: user.telefoneUSUARIO,
+                        lastAccess: new Date(user.logUSUARIO).toLocaleDateString("pt-BR"),
+                        isActive: user.ativoUSUARIO,
+                    }));
+                
+                setUsers(filteredUsers);
+            } catch (error) {
+                console.error("Erro ao buscar usuários:", error);
+            }
+        };
+
+        fetchUsers();
+    }, [token]);
+
+    const handleEditUser = async (userId: number) => {
+        const user = users.find(u => u.id === userId);
+    
+        if (user) {
+            const { value: formValues } = await Swal.fire({
+                title: 'Editar Usuário',
+                html:
+                    `<input id="swal-input1" class="swal2-input" placeholder="Nome" value="${user.name}">` +
+                    `<input id="swal-input2" class="swal2-input" placeholder="Email" value="${user.email}">` +
+                    `<input id="swal-input3" class="swal2-input" placeholder="Telefone" value="${user.phone}">`,
+                focusConfirm: false,
+                preConfirm: () => {
+                    return {
+                        nome: (document.getElementById('swal-input1') as HTMLInputElement).value,
+                        email: (document.getElementById('swal-input2') as HTMLInputElement).value,
+                        telefone: (document.getElementById('swal-input3') as HTMLInputElement).value
+                    }
+                }
+            });
+    
+            if (formValues) {
+                try {
+                    await axios.put(
+                        `https://api.spartacusprimetobacco.com.br/api/usuarios/editar/${userId}`,
+                        {
+                            nome: formValues.nome,
+                            email: formValues.email,
+                            telefone: formValues.telefone
+                        },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+    
+                    setUsers(users.map(u => u.id === userId ? { ...u, ...formValues } : u));
+    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Usuário editado com sucesso!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                } catch (error) {
+                    console.error("Erro ao editar usuário:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro ao editar usuário.',
+                        text: 'Ocorreu um erro, por favor tente novamente.',
+                        showConfirmButton: true
+                    });
+                }
+            }
+        }
+    };    
+
+    const handleDeleteUser = async (userId: number) => {
+        try {
+            await axios.delete(`https://api.spartacusprimetobacco.com.br/api/usuarios/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setUsers(users.filter(user => user.id !== userId));
+            alert("Usuário excluído com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir usuário:", error);
+            alert("Erro ao excluir usuário.");
+        }
+    };
+
+    const handleToggleActive = async (userId: number, isActive: boolean) => {
+        try {
+            await axios.patch(
+                `https://api.spartacusprimetobacco.com.br/api/usuarios/${userId}`,
+                { ativoUSUARIO: !isActive },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setUsers(users.map(user => user.id === userId ? { ...user, isActive: !isActive } : user));
+            
+            Swal.fire({
+                icon: 'success',
+                title: `Usuário ${!isActive ? "habilitado" : "desabilitado"} com sucesso!`,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        } catch (error) {
+            console.error("Erro ao alterar status do usuário:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro ao alterar status do usuário.',
+                text: 'Ocorreu um erro, por favor tente novamente.',
+                showConfirmButton: true
+            });
+        }
+    };    
 
     const indexOfLastUser = currentPage * usersPerPage;
     const indexOfFirstUser = indexOfLastUser - usersPerPage;
-    const filteredUsers = mockUsers.filter(user =>
+    const filteredUsers = users.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
 
     const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-    const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
+    const handlePageChange = (pageNumber: number) => setCurrentPage(pageNumber);
 
     return (
         <React.Fragment>
@@ -77,9 +192,13 @@ const UsuariosPage = () => {
                                 <td>{user.phone}</td>
                                 <td>{user.lastAccess}</td>
                                 <td>
-                                    <ActionIcon as={FaEdit} title="Editar" />
-                                    <ActionIcon as={FaLock} title="Bloquear" />
-                                    <ActionIcon as={FaTrash} title="Deletar" />
+                                    <ActionIcon as={FaEdit} title="Editar" onClick={() => handleEditUser(user.id)} />
+                                    <ActionIcon
+                                        as={FaLock}
+                                        title={user.isActive ? "Desabilitar" : "Habilitar"}
+                                        onClick={() => handleToggleActive(user.id, user.isActive)}
+                                    />
+                                    <ActionIcon as={FaTrash} title="Deletar" onClick={() => handleDeleteUser(user.id)} />
                                 </td>
                             </tr>
                         ))}
@@ -107,7 +226,6 @@ export default UsuariosPage;
 
 const Container = styled.div`
     padding: 20px;
-    // background-color: #f9f9f9;
 `;
 
 const Header = styled.div`
@@ -124,7 +242,7 @@ const AddButton = styled.button`
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
-    font-weight: bold
+    font-weight: bold;
 `;
 
 const SearchBar = styled.div`
@@ -212,7 +330,7 @@ const Pagination = styled.div`
     margin-top: 20px;
 `;
 
-const PageButton = styled.button`
+const PageButton = styled.button<{ active: boolean }>`
     border: none;
     background-color: transparent;
     padding: 8px 12px;

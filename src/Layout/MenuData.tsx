@@ -47,7 +47,7 @@ const menuItems = [
   //   id: "adicionar-produto",
   //   label: "Adicionar Produto",
   //   icon: "ph-duotone ph-plus-circle",
-  //   link: "/adicionar-produto",
+  //   link: "/add-product",
   // },
   {
     type: "HASHMENU",
