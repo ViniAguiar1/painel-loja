@@ -21,9 +21,9 @@ interface HeaderProps {
 const TopBar = ({ handleOffcanvasToggle }: HeaderProps) => {
     const dispatch = useDispatch<any>();
   
-    const [userName, setUserName] = useState<string>("Usuário");
-    const [userStaff, setUserStaff] = useState<string>("Cargo");
-    const [avatar1, setAvatar1] = useState<string>("https://github.com/ViniAguiar1.png"); // Define o valor padrão aqui
+    const [userName, setUserName] = useState<string>("");
+    const [userStaff, setUserStaff] = useState<string>("");
+    const [avatar1, setAvatar1] = useState<string>("");
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -31,11 +31,9 @@ const TopBar = ({ handleOffcanvasToggle }: HeaderProps) => {
             const decodedToken = parseJwt(token);
             setUserName(decodedToken?.nome || 'Usuário');
             setUserStaff(decodedToken?.cargo || 'Cargo');
-            if (decodedToken?.imagem) {
-                setAvatar1(decodedToken.imagem);
-            }
+            setAvatar1(decodedToken?.imagem);
         }
-    }, []); // Removendo avatar1 das dependências
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -80,7 +78,7 @@ const TopBar = ({ handleOffcanvasToggle }: HeaderProps) => {
                             <Dropdown as="li" className="pc-h-item header-user-profile">
                                 <Dropdown.Toggle className="pc-head-link arrow-none me-0" data-bs-toggle="dropdown" href="#"
                                     aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false" style={{ border: "none" }}>
-                                    <img src={avatar1 || "https://github.com/ViniAguiar1.png"} alt="user-image" width={40} className="user-avtar" />
+                                    <img src={avatar1 || avatar2} alt="user-image" width={40} className="user-avtar" />
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="dropdown-user-profile dropdown-menu-end pc-h-dropdown">
                                     <div className="dropdown-header d-flex align-items-center justify-content-between">
@@ -91,7 +89,7 @@ const TopBar = ({ handleOffcanvasToggle }: HeaderProps) => {
                                             <ul className="list-group list-group-flush w-100">
                                                 <li className="list-group-item">
                                                     <div className="d-flex align-items-center">
-                                                        <img src={avatar1 || "https://github.com/ViniAguiar1.png"} alt="user-image" width={50} className="wid-50 rounded-circle" />
+                                                        <img src={avatar1 || avatar2} alt="user-image" width={50} className="wid-50 rounded-circle" />
                                                         <div className="flex-grow-1 mx-3">
                                                             <h5 className="mb-0">{userName}</h5>
                                                             <p className="link-primary">{userStaff}</p>

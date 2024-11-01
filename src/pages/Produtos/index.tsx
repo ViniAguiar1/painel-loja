@@ -4,6 +4,7 @@ import BreadcrumbItem from "../../Common/BreadcrumbItem";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { FiFilter } from "react-icons/fi";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 
 const PageContainer = styled.div`
@@ -172,6 +173,11 @@ const ProdutosPage = () => {
     const [produtos, setProdutos] = useState([]);
     const [showEditModal, setShowEditModal] = useState(false);
     const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+    const navigate = useNavigate();
+
+    function redirectToAddProduct() {
+        navigate("/add-product");
+    }
 
 
     useEffect(() => {
@@ -481,7 +487,7 @@ const ProdutosPage = () => {
                         </FilterIconButton>
                     </SearchContainer>
 
-                    <NewProductButton>+ Novo Produto</NewProductButton>
+                    <NewProductButton onClick={redirectToAddProduct}>+ Novo Produto</NewProductButton>
                 </FilterContainer>
 
                 <Table>

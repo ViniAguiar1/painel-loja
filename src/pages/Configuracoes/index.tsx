@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-// import BreadcrumbItem from "../../Common/BreadcrumbItem";
-import { Breadcrumb } from "react-bootstrap";
+import { Breadcrumb, Modal } from "react-bootstrap";
+import axios from "axios";
 
 const Container = styled.div`
   padding: 20px;
@@ -60,9 +60,8 @@ const ColorPickerLabel = styled(Label)`
 const ColorPicker = styled.div`
   width: 40px;
   height: 40px;
-  background-color: #BF9000;
+  background-color: #bf9000;
   border-radius: 5px;
-//   margin-top: 8px;
 `;
 
 const ButtonContainer = styled.div`
@@ -72,7 +71,7 @@ const ButtonContainer = styled.div`
 `;
 
 const Button = styled.button`
-  background-color: #BF9000;
+  background-color: #bf9000;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -135,50 +134,108 @@ const PageButton = styled.button`
 const ConfiguracoesPage = () => {
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
+  const [configuracoes, setConfiguracoes] = useState({});
+  const [usuarios, setUsuarios] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({});
 
-  const data = Array.from({ length: 35 }, (_, index) => ({
-    usuario: `Nome do Usuário ${index + 1}`,
-    horario: "14:00",
-    data: "15/10/21",
-  }));
+  useEffect(() => {
+    const fetchConfiguracoes = async () => {
+      try {
+        const response = await axios.get("https://api.spartacusprimetobacco.com.br/api/configuracoes", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        setConfiguracoes(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar configurações:", error);
+      }
+    };
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const currentData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const fetchUsuarios = async () => {
+      try {
+        const response = await axios.get("https://api.spartacusprimetobacco.com.br/api/usuarios", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        const usuariosFiltrados = response.data.filter(user => user.tipoUSUARIO !== 6);
+        setUsuarios(usuariosFiltrados);
+      } catch (error) {
+        console.error("Erro ao buscar usuários:", error);
+      }
+    };
+
+    fetchConfiguracoes();
+    fetchUsuarios();
+  }, []);
+
+  const totalPages = Math.ceil(usuarios.length / itemsPerPage);
+  const currentData = usuarios.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
+  const handleModalOpen = () => {
+    setFormData(configuracoes);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await axios.put(`https://api.spartacusprimetobacco.com.br/api/configuracoes/${configuracoes.id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setConfiguracoes(formData);
+      setShowModal(false);
+    } catch (error) {
+      console.error("Erro ao atualizar configurações:", error);
+    }
+  };
+
   return (
     <React.Fragment>
-       <div>
-                    <h2>Configurações</h2>
-                    <Breadcrumb>
-                        <Breadcrumb.Item href="#">Dashboard</Breadcrumb.Item>
-                        <Breadcrumb.Item active>Configurações</Breadcrumb.Item>
-                    </Breadcrumb>
-                </div>
+      <div>
+        <h2>Configurações</h2>
+        <Breadcrumb>
+          <Breadcrumb.Item href="#">Dashboard</Breadcrumb.Item>
+          <Breadcrumb.Item active>Configurações</Breadcrumb.Item>
+        </Breadcrumb>
+      </div>
       <Container>
         <SectionTitle>Informações do Sistema</SectionTitle>
         <FormSection>
           <InputGroup>
             <Label>Nome do sistema</Label>
-            <Input type="text" placeholder="SPARTACUS" />
+            <Input type="text" value={configuracoes.nomeConfiguracoes || "SPARTACUS"} readOnly />
           </InputGroup>
           <ColorPickerContainer>
             <ColorPickerLabel>Cor do sistema</ColorPickerLabel>
-            <ColorPicker />
+            <ColorPicker style={{ backgroundColor: configuracoes.corConfiguracoes || "#BF9000" }} />
           </ColorPickerContainer>
           <InputGroup>
             <Label>Chave API</Label>
-            <Input type="text" placeholder="Smartwatch E2" />
+            <Input type="text" value={configuracoes.key_payConfiguracoes || ""} readOnly />
           </InputGroup>
           <InputGroup>
             <Label>Telegram</Label>
-            <Input type="text" placeholder="Smartwatch E2" />
+            <Input type="text" value={configuracoes.supportConfiguracoes || ""} readOnly />
           </InputGroup>
           <ButtonContainer>
-            <Button>Atualizar</Button>
+            <Button onClick={handleModalOpen}>Atualizar</Button>
           </ButtonContainer>
         </FormSection>
 
@@ -186,24 +243,28 @@ const ConfiguracoesPage = () => {
         <Table>
           <thead>
             <tr>
-              <TableHeader>Usuário</TableHeader>
-              <TableHeader>Horário</TableHeader>
-              <TableHeader>Data</TableHeader>
+              <TableHeader>Nome</TableHeader>
+              <TableHeader>Email</TableHeader>
+              <TableHeader>Telefone</TableHeader>
+              <TableHeader>Localização</TableHeader>
+              <TableHeader>Último Login</TableHeader>
             </tr>
           </thead>
           <tbody>
-            {currentData.map((item, index) => (
-              <TableRow key={index}>
+            {currentData.map((usuario) => (
+              <TableRow key={usuario.codigoUSUARIO}>
                 <TableCell>
                   <img
-                    src="https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small_2x/user-profile-icon-free-vector.jpg"
+                    src={usuario.imagemUSUARIO}
                     alt="Avatar"
                     style={{ marginRight: "10px", borderRadius: "50%", width: 50, height: 50 }}
                   />
-                  {item.usuario}
+                  {usuario.nomeUSUARIO}
                 </TableCell>
-                <TableCell>{item.horario}</TableCell>
-                <TableCell>{item.data}</TableCell>
+                <TableCell>{usuario.emailUSUARIO}</TableCell>
+                <TableCell>{usuario.telefoneUSUARIO}</TableCell>
+                <TableCell>{usuario.localizacaoUSUARIO}</TableCell>
+                <TableCell>{new Date(usuario.logUSUARIO).toLocaleString()}</TableCell>
               </TableRow>
             ))}
           </tbody>
@@ -221,6 +282,54 @@ const ConfiguracoesPage = () => {
           ))}
         </Pagination>
       </Container>
+
+      <Modal show={showModal} onHide={handleModalClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Atualizar Configurações</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <InputGroup>
+            <Label>Nome do sistema</Label>
+            <Input
+              type="text"
+              name="nomeConfiguracoes"
+              value={formData.nomeConfiguracoes || ""}
+              onChange={handleInputChange}
+            />
+          </InputGroup>
+          <InputGroup>
+            <Label>Cor do sistema</Label>
+            <Input
+              type="text"
+              name="corConfiguracoes"
+              value={formData.corConfiguracoes || ""}
+              onChange={handleInputChange}
+            />
+          </InputGroup>
+          <InputGroup>
+            <Label>Chave API</Label>
+            <Input
+              type="text"
+              name="key_payConfiguracoes"
+              value={formData.key_payConfiguracoes || ""}
+              onChange={handleInputChange}
+            />
+          </InputGroup>
+          <InputGroup>
+            <Label>Telegram</Label>
+            <Input
+              type="text"
+              name="supportConfiguracoes"
+              value={formData.supportConfiguracoes || ""}
+              onChange={handleInputChange}
+            />
+          </InputGroup>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={handleUpdate}>Salvar</Button>
+          <Button onClick={handleModalClose}>Cancelar</Button>
+        </Modal.Footer>
+      </Modal>
     </React.Fragment>
   );
 };

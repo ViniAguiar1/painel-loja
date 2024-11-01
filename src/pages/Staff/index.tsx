@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { IoMdClose } from "react-icons/io";
-import BreadcrumbItem from "../../Common/BreadcrumbItem";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 
@@ -128,6 +127,15 @@ const Input = styled.input`
     font-size: 1em;
 `;
 
+const Select = styled.select`
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+`;
+
 const ButtonContainer = styled.div`
     display: flex;
     justify-content: flex-end;
@@ -155,37 +163,47 @@ const AddButton = styled.button`
 `;
 
 const Staff = () => {
-    const initialStaffs = Array.from({ length: 30 }, (_, i) => ({
-        id: i + 1,
-        name: `Staff ${i + 1}`
-    }));
-
-    const [staffs, setStaffs] = useState(initialStaffs);
+    const [staffs, setStaffs] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModal, setIsEditModal] = useState(false);
     const [currentStaffId, setCurrentStaffId] = useState(null);
     const [newStaffName, setNewStaffName] = useState("");
+    const [systemStaff, setSystemStaff] = useState(1);
+    const [activeStaff, setActiveStaff] = useState(true);
 
     const itemsPerPage = 10;
-    const filteredStaffs = staffs.filter(staff =>
-        staff.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const totalPages = Math.ceil(filteredStaffs.length / itemsPerPage);
-    const paginatedStaffs = filteredStaffs.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+
+    const fetchStaffs = async () => {
+        const token = localStorage.getItem("token");
+        try {
+            const response = await fetch("https://api.spartacusprimetobacco.com.br/api/tipos-usuarios", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await response.json();
+            setStaffs(data);
+        } catch (error) {
+            console.error("Erro ao buscar os cargos de usuário:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchStaffs();
+    }, []);
 
     const openModal = (isEdit = false, staff = null) => {
         setIsEditModal(isEdit);
         setIsModalOpen(true);
         if (isEdit && staff) {
-            setCurrentStaffId(staff.id);
-            setNewStaffName(staff.name);
+            setCurrentStaffId(staff.idTIPOUSUARIO);
+            setNewStaffName(staff.nomeTIPOUSUARIO);
+            setSystemStaff(staff.sistemaTIPOUSUARIO);
+            setActiveStaff(staff.ativoTIPOUSUARIO);
         } else {
             setNewStaffName("");
+            setSystemStaff(1);
+            setActiveStaff(true);
         }
     };
 
@@ -193,26 +211,70 @@ const Staff = () => {
         setIsModalOpen(false);
         setIsEditModal(false);
         setNewStaffName("");
+        setSystemStaff(1);
+        setActiveStaff(true);
     };
 
-    const handleAddStaff = () => {
-        const newStaff = { id: Date.now(), name: newStaffName };
-        setStaffs([...staffs, newStaff]);
-        closeModal();
-        Swal.fire("Adicionado!", "Novo staff foi adicionado com sucesso.", "success");
+    const handleAddStaff = async () => {
+        const token = localStorage.getItem("token");
+        const newStaff = {
+            nomeTIPOUSUARIO: newStaffName,
+            sistemaTIPOUSUARIO: systemStaff,
+            ativoTIPOUSUARIO: activeStaff
+        };
+        try {
+            const response = await fetch("https://api.spartacusprimetobacco.com.br/api/tipos-usuarios", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(newStaff)
+            });
+            if (response.ok) {
+                fetchStaffs();
+                closeModal();
+                Swal.fire("Adicionado!", "Novo cargo foi adicionado com sucesso.", "success");
+            } else {
+                throw new Error("Erro ao adicionar o cargo");
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Erro", "Não foi possível adicionar o cargo.", "error");
+        }
     };
 
-    const handleEditStaff = () => {
-        setStaffs(
-            staffs.map(staff =>
-                staff.id === currentStaffId ? { ...staff, name: newStaffName } : staff
-            )
-        );
-        closeModal();
-        Swal.fire("Atualizado!", "Staff foi atualizado com sucesso.", "success");
+    const handleEditStaff = async () => {
+        const token = localStorage.getItem("token");
+        const updatedStaff = {
+            nomeTIPOUSUARIO: newStaffName,
+            sistemaTIPOUSUARIO: systemStaff,
+            ativoTIPOUSUARIO: activeStaff
+        };
+        try {
+            const response = await fetch(`https://api.spartacusprimetobacco.com.br/api/tipos-usuarios/${currentStaffId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(updatedStaff)
+            });
+            if (response.ok) {
+                fetchStaffs();
+                closeModal();
+                Swal.fire("Atualizado!", "Cargo foi atualizado com sucesso.", "success");
+            } else {
+                throw new Error("Erro ao atualizar o cargo");
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Erro", "Não foi possível atualizar o cargo.", "error");
+        }
     };
 
     const handleDeleteStaff = (id) => {
+        const token = localStorage.getItem("token");
         Swal.fire({
             title: "Tem certeza?",
             text: "Você não poderá reverter isso!",
@@ -222,10 +284,23 @@ const Staff = () => {
             cancelButtonColor: "#6c757d",
             confirmButtonText: "Sim, excluir!",
             cancelButtonText: "Cancelar"
-        }).then((result) => {
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                setStaffs(staffs.filter(staff => staff.id !== id));
-                Swal.fire("Excluído!", "O staff foi excluído.", "success");
+                try {
+                    const response = await fetch(`https://api.spartacusprimetobacco.com.br/api/tipos-usuarios/${id}`, {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        fetchStaffs();
+                        Swal.fire("Excluído!", "O cargo foi excluído.", "success");
+                    } else {
+                        throw new Error("Erro ao excluir o cargo");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire("Erro", "Não foi possível excluir o cargo.", "error");
+                }
             }
         });
     };
@@ -239,10 +314,18 @@ const Staff = () => {
         setCurrentPage(page);
     };
 
+    const filteredStaffs = staffs.filter(staff =>
+        staff.nomeTIPOUSUARIO.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const totalPages = Math.ceil(filteredStaffs.length / itemsPerPage);
+    const paginatedStaffs = filteredStaffs.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     return (
         <PageContainer>
-            {/* <BreadcrumbItem mainTitle="Staffs" subTitle="Staffs" /> */}
-            <h1 style={{ fontFamily: 'Public Sans', color: '#23272E', fontWeight: 700}}>Staffs</h1>
+            <h1 style={{ fontFamily: 'Public Sans', color: '#23272E', fontWeight: 700}}>Cargos de Usuários</h1>
             <Container>
                 <div className="d-flex justify-content-between align-items-center my-3">
                     <input
@@ -253,25 +336,29 @@ const Staff = () => {
                         value={searchTerm}
                         onChange={handleSearch}
                     />
-                    <NewStaffButton onClick={() => openModal()}>+ Novo Staff</NewStaffButton>
+                    <NewStaffButton onClick={() => openModal()}>+ Novo Cargo</NewStaffButton>
                 </div>
                 <StaffTable>
                     <TableHead>
                         <TableRow>
                             <TableCell>Nome</TableCell>
+                            <TableCell>Sistema</TableCell>
+                            <TableCell>Ativo</TableCell>
                             <TableCell>Ação</TableCell>
                         </TableRow>
                     </TableHead>
                     <tbody>
                         {paginatedStaffs.map(staff => (
-                            <TableRow key={staff.id}>
-                                <TableCell>{staff.name}</TableCell>
+                            <TableRow key={staff.idTIPOUSUARIO}>
+                                <TableCell>{staff.nomeTIPOUSUARIO}</TableCell>
+                                <TableCell>{staff.sistemaTIPOUSUARIO === 1 ? "Sim" : "Não"}</TableCell>
+                                <TableCell>{staff.ativoTIPOUSUARIO ? "Sim" : "Não"}</TableCell>
                                 <TableCell>
                                     <IconsContainer>
                                         <IconButton onClick={() => openModal(true, staff)}>
                                             <FiEdit />
                                         </IconButton>
-                                        <IconButton onClick={() => handleDeleteStaff(staff.id)}>
+                                        <IconButton onClick={() => handleDeleteStaff(staff.idTIPOUSUARIO)}>
                                             <FiTrash />
                                         </IconButton>
                                     </IconsContainer>
@@ -302,13 +389,29 @@ const Staff = () => {
                         <CloseButton onClick={closeModal}>
                             <IoMdClose />
                         </CloseButton>
-                        <ModalTitle>{isEditModal ? "Editar Staff" : "Novo Staff"}</ModalTitle>
+                        <ModalTitle>{isEditModal ? "Editar Cargo" : "Novo Cargo"}</ModalTitle>
                         <Input
                             type="text"
-                            placeholder="Nome do staff"
+                            placeholder="Nome do cargo"
                             value={newStaffName}
                             onChange={(e) => setNewStaffName(e.target.value)}
                         />
+                        <label>Associado ao Sistema:</label>
+                        <Select
+                            value={systemStaff}
+                            onChange={(e) => setSystemStaff(parseInt(e.target.value))}
+                        >
+                            <option value={1}>Sim - Cargo com Permissões Administrativas</option>
+                            <option value={0}>Não - Cargo Comum sem Permissões Especiais</option>
+                        </Select>
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={activeStaff}
+                                onChange={(e) => setActiveStaff(e.target.checked)}
+                            />
+                            Ativo
+                        </label>
                         <ButtonContainer>
                             <CancelButton onClick={closeModal}>Cancelar</CancelButton>
                             <AddButton onClick={isEditModal ? handleEditStaff : handleAddStaff}>

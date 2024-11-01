@@ -7,7 +7,7 @@ import { logout } from '../toolkit/authSlice';
 import SimpleBar from "simplebar-react";
 import { parseJwt } from "../services/jwtService";
 
-//import images 
+// Importa imagem de avatar
 import avatar2 from "../assets/images/user/avatar-2.jpg";
 
 interface HeaderProps {
@@ -21,9 +21,10 @@ interface HeaderProps {
 const TopBar = ({ handleOffcanvasToggle }: HeaderProps) => {
     const dispatch = useDispatch<any>();
   
-    const [userName, setUserName] = useState<string>("");
-    const [userStaff, setUserStaff] = useState<string>("");
-    const [avatar1, setAvatar1] = useState<string>("");
+    const [userName, setUserName] = useState<string>("Usuário");
+    const [userStaff, setUserStaff] = useState<string>("Cargo");
+    const [avatar1, setAvatar1] = useState<string>("https://github.com/ViniAguiar1.png");
+    const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false); // Estado para controle do menu
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -31,9 +32,15 @@ const TopBar = ({ handleOffcanvasToggle }: HeaderProps) => {
             const decodedToken = parseJwt(token);
             setUserName(decodedToken?.nome || 'Usuário');
             setUserStaff(decodedToken?.cargo || 'Cargo');
-            setAvatar1(decodedToken?.imagem);
+            if (decodedToken?.imagem) {
+                setAvatar1(decodedToken.imagem);
+            }
         }
     }, []);
+
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -47,11 +54,14 @@ const TopBar = ({ handleOffcanvasToggle }: HeaderProps) => {
                 <div className="header-wrapper">
                     <div className="ms-auto">
                         <ul className="list-unstyled">
-                            <Dropdown as="li" className="pc-h-item">
+                            <Dropdown as="li" className="pc-h-item" show={isMenuOpen}>
                                 <Dropdown.Toggle
                                     as="a"
-                                    className="pc-head-link arrow-none me-0" data-bs-toggle="dropdown" href="#"
-                                    aria-haspopup="false">
+                                    className="pc-head-link arrow-none me-0"
+                                    href="#"
+                                    onClick={toggleMenu} // Função para abrir e fechar o menu
+                                    aria-haspopup="false"
+                                >
                                     <i className="ph-duotone ph-bell"></i>
                                     <span className="badge bg-success pc-h-badge">3</span>
                                 </Dropdown.Toggle>
@@ -78,7 +88,7 @@ const TopBar = ({ handleOffcanvasToggle }: HeaderProps) => {
                             <Dropdown as="li" className="pc-h-item header-user-profile">
                                 <Dropdown.Toggle className="pc-head-link arrow-none me-0" data-bs-toggle="dropdown" href="#"
                                     aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false" style={{ border: "none" }}>
-                                    <img src={avatar1 || avatar2} alt="user-image" width={40} className="user-avtar" />
+                                    <img src={avatar1 || "https://github.com/ViniAguiar1.png"} alt="user-image" width={40} className="user-avtar" />
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="dropdown-user-profile dropdown-menu-end pc-h-dropdown">
                                     <div className="dropdown-header d-flex align-items-center justify-content-between">
