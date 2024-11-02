@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import styled from 'styled-components';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faCalendarAlt, faBan } from '@fortawesome/free-solid-svg-icons';
 
 const Container = styled.div`
   padding: 20px;
@@ -34,9 +37,13 @@ const Button = styled.button`
   border: none;
   border-radius: 5px;
   padding: 8px 16px;
-  cursor: pointer;
+  cursor: not-allowed;
   font-size: 14px;
   font-weight: 600;
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 const ActionsContainer = styled.div`
@@ -71,25 +78,29 @@ const SearchIcon = styled(FontAwesomeIcon)`
   color: #aaa;
 `;
 
-const DateButton = styled.button`
+const DateRangeContainer = styled.div`
   display: flex;
   align-items: center;
+  gap: 8px;
   background-color: #f5f7fa;
-  color: #666;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  padding: 8px 12px;
   font-size: 14px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #e1e4e8;
-  }
+  color: #666;
 `;
 
-const Icon = styled(FontAwesomeIcon)`
-  margin-right: 8px;
+const StyledDatePicker = styled(DatePicker)`
+  border: none;
+  background: transparent;
+  font-size: 14px;
   color: #666;
+  outline: none;
+  width: 80px;
+
+  &::placeholder {
+    color: #aaa;
+  }
 `;
 
 const Total = styled.div`
@@ -149,18 +160,28 @@ const Saidas: React.FC = () => {
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [data, setData] = useState([]);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
-  // Exemplo de um conjunto maior de produtos para demonstração
-  const data = Array.from({ length: 100 }, (_, index) => ({
-    nome: `Nome do produto ${index + 1}`,
-    quantidade: Math.floor(Math.random() * 100) + 1,
-    valor: 'R$ 150,00',
-    valorLiquido: 'R$ 150,00',
-  }));
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const response = await axios.get('https://api.spartacusprimetobacco.com.br/api/lancamentos');
+        setData(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar as despesas:', error);
+      }
+    };
+    fetchExpenses();
+  }, []);
 
-  const filteredData = data.filter((item) =>
-    item.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = data.filter((item) => {
+    const itemDate = new Date(item.datacriacaoLANCAMENTO);
+    const isWithinDateRange = startDate && endDate ? itemDate >= startDate && itemDate <= endDate : true;
+    const isMatchSearchTerm = item.nomeLANCAMENTO.toLowerCase().includes(searchTerm.toLowerCase());
+    return isMatchSearchTerm && isWithinDateRange;
+  });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -171,16 +192,19 @@ const Saidas: React.FC = () => {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1); // Reseta para a primeira página ao realizar uma nova busca
+    setCurrentPage(1);
   };
 
   return (
     <Container>
       <Header>Saídas</Header>
       <SubHeader>
-        <div><p style={{ color: '#353535', fontWeight: 500, fontSize: 20 }}>Produtos</p></div>
+        <div><p style={{ color: '#353535', fontWeight: 500, fontSize: 20 }}>Despesas</p></div>
         <ActionsContainer>
-          <Button>Ver gráfico</Button>
+          <Button disabled>
+            <FontAwesomeIcon icon={faBan} />
+            Ver gráfico
+          </Button>
           <SearchContainer>
             <SearchInput
               type="text"
@@ -190,32 +214,47 @@ const Saidas: React.FC = () => {
             />
             <SearchIcon icon={faSearch} />
           </SearchContainer>
-          <DateButton>
-            <Icon icon={faCalendarAlt} />
-            Selecionar data
-          </DateButton>
+          <DateRangeContainer>
+            <FontAwesomeIcon icon={faCalendarAlt} />
+            <StyledDatePicker
+              selected={startDate}
+              onChange={(date) => setStartDate(date)}
+              selectsStart
+              startDate={startDate}
+              endDate={endDate}
+              placeholderText="Início"
+            />
+            <span>–</span>
+            <StyledDatePicker
+              selected={endDate}
+              onChange={(date) => setEndDate(date)}
+              selectsEnd
+              startDate={startDate}
+              endDate={endDate}
+              minDate={startDate}
+              placeholderText="Fim"
+            />
+          </DateRangeContainer>
         </ActionsContainer>
       </SubHeader>
-      <Total>Total R$ 4.680</Total>
+      <Total>Total de despesas</Total>
       <Table>
         <thead>
           <tr>
-            <TableHeader>Produto</TableHeader>
-            <TableHeader>Quantidade</TableHeader>
-            <TableHeader>Valor</TableHeader>
-            <TableHeader>Valor Líquido</TableHeader>
+            <TableHeader>Despesa</TableHeader>
+            <TableHeader>Preço</TableHeader>
+            <TableHeader>Data</TableHeader>
           </tr>
         </thead>
         <tbody>
-          {currentData.map((item, index) => (
-            <TableRow key={index}>
+          {currentData.map((item) => (
+            <TableRow key={item.codigoLANCAMENTO}>
               <TableCell>
-                <img src="https://via.placeholder.com/50" alt="Produto" style={{ marginRight: '10px', width: 50, height: 50 }} />
-                {item.nome}
+                <img src="https://via.placeholder.com/50" alt="Despesa" style={{ marginRight: '10px', width: 50, height: 50 }} />
+                {item.nomeLANCAMENTO}
               </TableCell>
-              <TableCell>{item.quantidade}</TableCell>
-              <TableCell>{item.valor}</TableCell>
-              <TableCell>{item.valorLiquido}</TableCell>
+              <TableCell>R$ {parseFloat(item.precoLANCAMENTO).toFixed(2)}</TableCell>
+              <TableCell>{new Date(item.datacriacaoLANCAMENTO).toLocaleDateString()}</TableCell>
             </TableRow>
           ))}
         </tbody>

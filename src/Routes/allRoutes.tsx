@@ -41,7 +41,7 @@ const routes = [
     { path: "/usuarios", component: <Usuarios /> },
     { path: "/links", component: <Links /> },    
     { path: "/configuracoes", component: <Configuracoes /> },
-    { path: "/others-request", component: <OthersRequest /> },
+    { path: "/others-request/:id", component: <OthersRequest /> },
     { path: "/client-details/:id", component: <ClientDetails /> }, // Adicionar a rota para ClientDetails
     { path: "/add-categorie", component: <AddCategorie /> },
     { path: "/despesas", component: <Despesas />},

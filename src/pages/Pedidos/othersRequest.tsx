@@ -1,19 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaCalendarAlt, FaCreditCard, FaShippingFast, FaUser, FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, FaBox, FaTruck, FaCheckCircle } from 'react-icons/fa';
 import { MdPayment } from 'react-icons/md';
 import { Breadcrumb } from 'react-bootstrap';
+import moment from 'moment';
 
 const OrderDetailsContainer = styled.div`
     padding: 20px;
     font-family: Arial, sans-serif;
     color: #333;
-`;
-
-const Breadcrumbs = styled.div`
-    font-size: 14px;
-    color: #888;
-    margin-bottom: 10px;
 `;
 
 const Title = styled.h1`
@@ -43,12 +39,10 @@ const Section = styled.div`
 `;
 
 const OrderSummary = styled(Section)``;
-
 const CustomerInfo = styled(Section)``;
-
 const OrderItems = styled(Section)`
     grid-column: span 1;
-    height: 28rem
+    height: 28rem;
 `;
 
 const AddressAndStatusContainer = styled.div`
@@ -58,7 +52,6 @@ const AddressAndStatusContainer = styled.div`
 `;
 
 const AddressInfo = styled(Section)``;
-
 const StatusInfo = styled(Section)``;
 
 const SectionTitle = styled.h3`
@@ -69,7 +62,7 @@ const SectionTitle = styled.h3`
 `;
 
 const StatusBadge = styled.span`
-    background-color: #28a745; /* Cor verde */
+    background-color: #28a745;
     color: #fff;
     padding: 5px 10px;
     border-radius: 12px;
@@ -185,26 +178,49 @@ const StatusItem = styled.div`
     }
 `;
 
-const OrderDetails = () => {
+const OthersRequest: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const [orderDetails, setOrderDetails] = useState<any>(null);
+
+    useEffect(() => {
+        if (id) {
+            const token = localStorage.getItem('token');
+            fetch(`https://api.spartacusprimetobacco.com.br/api/carrinhos/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => setOrderDetails(data))
+            .catch(error => console.error("Erro ao buscar detalhes do pedido:", error));
+        }
+    }, [id]);
+
+    if (!orderDetails) {
+        return <p>Carregando...</p>;
+    }
+
     return (
         <OrderDetailsContainer>
             <Title>Detalhe dos pedidos</Title>
-             <Breadcrumb>
-                        <Breadcrumb.Item href="#">Dashboard</Breadcrumb.Item>
-                        <Breadcrumb.Item href='#'>Pedidos</Breadcrumb.Item>
-                        <Breadcrumb.Item active>Pedidos</Breadcrumb.Item>
-                    </Breadcrumb>
+            <Breadcrumb>
+                <Breadcrumb.Item href="#">Dashboard</Breadcrumb.Item>
+                <Breadcrumb.Item href='/pedidos'>Pedidos</Breadcrumb.Item>
+                <Breadcrumb.Item active>Pedido {id}</Breadcrumb.Item>
+            </Breadcrumb>
 
             <OrderDetailsGrid>
                 <OrderSummary>
                     <h2>
-                        Pedido #302011 
-                        <StatusBadge style={{ backgroundColor: '#FDF1E8', color: '#E46A11'}}>Processing</StatusBadge>
+                        Pedido #{orderDetails.codigoCARRINHO}
+                        <StatusBadge style={{ backgroundColor: '#FDF1E8', color: '#E46A11'}}>
+                            {orderDetails.statusCARRINHO ? 'Ativo' : 'Inativo'}
+                        </StatusBadge>
                     </h2>
                     <DetailRow>
                         <FaCalendarAlt />
                         <span>Data de criação:</span>
-                        <strong>12 Jan 2024</strong>
+                        <strong>{moment(orderDetails.datacriacaoCARRINHO).format('DD MMM YYYY')}</strong>
                     </DetailRow>
                     <DetailRow>
                         <FaCreditCard />
@@ -223,17 +239,17 @@ const OrderDetails = () => {
                     <DetailRow>
                         <FaUser />
                         <span>Cliente:</span>
-                        <strong>João Silva</strong>
+                        <strong>{orderDetails.nomeCARRINHO} {orderDetails.sobrenomeCARRINHO}</strong>
                     </DetailRow>
                     <DetailRow>
                         <FaEnvelope />
                         <span>E-mail:</span>
-                        <strong>joaosilva@gmail.com</strong>
+                        <strong>{orderDetails.emailCARRINHO}</strong>
                     </DetailRow>
                     <DetailRow>
                         <FaPhoneAlt />
                         <span>Celular:</span>
-                        <strong>11 98765-4321</strong>
+                        <strong>{orderDetails.areaTelefoneCARRINHO} {orderDetails.telefoneCARRINHO}</strong>
                     </DetailRow>
                 </CustomerInfo>
             </OrderDetailsGrid>
@@ -345,4 +361,4 @@ const OrderDetails = () => {
     );
 };
 
-export default OrderDetails;
+export default OthersRequest;

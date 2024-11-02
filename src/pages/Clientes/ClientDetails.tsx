@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaCalendarAlt, FaUser, FaDollarSign, FaShoppingCart, FaAward } from 'react-icons/fa';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
 
 const Container = styled.div`
   padding: 20px;
@@ -49,6 +51,27 @@ const AddClientButton = styled.button`
   cursor: pointer;
 `;
 
+const StyledButton = styled.button`
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  &:hover {
+    background-color: #e0e0e0;
+    border-color: #b8860b;
+    color: #b8860b;
+  }
+`;
+
 const ClientProfileCard = styled.div`
   background-color: #ffffff;
   border-radius: 10px;
@@ -57,31 +80,26 @@ const ClientProfileCard = styled.div`
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   text-align: center;
   position: relative;
-  height: 31.25rem
+  height: 31.25rem;
 `;
 
 const ProfileCover = styled.div`
-//   width: 110%;
   height: 120px;
   background-color: #BF9000;
   border-radius: 8px;
   position: relative;
-  margin: -14px
+  margin: -14px;
 `;
 
-const ProfileImage = styled.div`
+const ProfileImage = styled.img`
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
   margin: 0 auto;
   position: relative;
   top: -40px;
   border: 3px solid #ffffff;
+  object-fit: cover;
 `;
 
 const ClientName = styled.h2`
@@ -169,8 +187,9 @@ const SummarySection = styled.div`
   display: flex;
   gap: 20px;
   width: 100%;
-  margin-bottom: 0.875rem
+  margin-bottom: 0.875rem;
 `;
+
 const OrderHistorySection = styled.div`
   background-color: #ffffff;
   border-radius: 10px;
@@ -235,10 +254,35 @@ const PageButton = styled.button<{ active?: boolean }>`
 `;
 
 const ClientDetails: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [client, setClient] = useState<any>({
+    nomeUSUARIO: '',
+    emailUSUARIO: '',
+    telefoneUSUARIO: '',
+    localizacaoUSUARIO: '',
+    logUSUARIO: '',
+    imagemUSUARIO: '',
+    nivelUSUARIO: 'Bronze',
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 15;
-  const totalOrders = 30;
+  const totalOrders = 0;
   const totalPages = Math.ceil(totalOrders / ordersPerPage);
+
+  useEffect(() => {
+    const fetchClient = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`https://api.spartacusprimetobacco.com.br/api/usuarios/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setClient(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar detalhes do cliente:', error);
+      }
+    };
+    fetchClient();
+  }, [id]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -246,14 +290,16 @@ const ClientDetails: React.FC = () => {
     }
   };
 
-  const mockOrders = Array.from({ length: totalOrders }, (_, index) => ({
-    id: 302000 + index,
-    image: 'https://acdn.mitiendanube.com/stores/001/876/620/products/camisa-retro-selecao-brasileira-brasil-copa-1998-remake-masculina-fan-amarela-home-titular-ronaldo-edmundo-taffarel-cafu-roberto-carlos-rivaldo-vini-jr-1-a1b9a31740fba03c0417194265327814-640-0.jpg',
-    product: `Produto ${index + 1}`,
-    total: 'R$ 200',
-    status: index % 3 === 0 ? 'Processando' : index % 3 === 1 ? 'Em entrega' : 'Finalizado',
-    date: '12/12/2023',
-  }));
+  const mockOrders = totalOrders > 0
+    ? Array.from({ length: totalOrders }, (_, index) => ({
+        id: 302000 + index,
+        image: client.imagemUSUARIO || 'default-image-url',
+        product: `Produto ${index + 1}`,
+        total: 'R$ 200',
+        status: index % 3 === 0 ? 'Processando' : index % 3 === 1 ? 'Em entrega' : 'Finalizado',
+        date: '12/12/2023',
+      }))
+    : [];
 
   const paginatedOrders = mockOrders.slice(
     (currentPage - 1) * ordersPerPage,
@@ -265,105 +311,104 @@ const ClientDetails: React.FC = () => {
       <div style={{ width: '100%' }}>
         <Header>
           <Breadcrumb>Dashboard {'>'} <span style={{ color: 'red' }}>Lista de Clientes</span> {'>'} Detalhe do Cliente</Breadcrumb>
-          <ButtonGroup>
+          {/* <ButtonGroup>
             <ExportButton>Exportar</ExportButton>
             <AddClientButton>+ Add Cliente</AddClientButton>
-          </ButtonGroup>
+          </ButtonGroup> */}
         </Header>
 
         <div style={{ display: 'flex', gap: '20px' }}>
           <ClientProfileCard>
             <ProfileCover />
-            <ProfileImage>
-              {/* Aqui você pode colocar uma imagem real, se tiver */}
-              <span>LB</span>
-            </ProfileImage>
-            <ClientName>Linda Blair <Badge>Bronze</Badge></ClientName>
-            <Username>@linda_blair321</Username>
+            <ProfileImage src={client.imagemUSUARIO || 'https://via.placeholder.com/80'} alt={client.nomeUSUARIO} />
+            <ClientName>{client.nomeUSUARIO} <Badge>{client.nivelUSUARIO}</Badge></ClientName>
+            <Username>@{client.telegramUSUARIO || ''}</Username>
             <ContactInfo>
               <InfoItem>
                 <InfoIcon><FaUser /></InfoIcon> 
-                <span>ID do Cliente: ID-01221</span>
+                <span>ID do Cliente: {client.codigoUSUARIO || 'ID-00000'}</span>
               </InfoItem>
               <InfoItem>
                 <InfoIcon><FaEnvelope /></InfoIcon> 
-                <span>Email: lindablair@gmail.com</span>
+                <span>Email: {client.emailUSUARIO || 'N/A'}</span>
               </InfoItem>
               <InfoItem>
                 <InfoIcon><FaPhone /></InfoIcon> 
-                <span>Celular: +55 11 98716.1276</span>
+                <span>Celular: {client.telefoneUSUARIO || 'N/A'}</span>
               </InfoItem>
               <InfoItem>
                 <InfoIcon><FaMapMarkerAlt /></InfoIcon> 
-                <span>Endereço de Entrega: Avenida Paulista, 1471, CJ 12, Bela Vista, São Paulo - SP</span>
+                <span>Endereço de Entrega: {client.localizacaoUSUARIO || 'N/A'}</span>
               </InfoItem>
               <InfoItem>
                 <InfoIcon><FaCalendarAlt /></InfoIcon> 
-                <span>Último Pedido: 12 de Dezembro de 2022</span>
+                <span>Último Pedido: {client.logUSUARIO || 'N/A'}</span>
               </InfoItem>
             </ContactInfo>
           </ClientProfileCard>
 
           <ClientDetailsBox>
-          <SummarySection>
-        <SummaryCard>
-          <IconWrapper bgColor="#E0F2F1">
-            <FaDollarSign color="#388E3C" />
-          </IconWrapper>
-          <SummaryTitle>Total de Vendas</SummaryTitle>
-          <SummaryValue>R$ 723,00</SummaryValue>
-        </SummaryCard>
-        <SummaryCard>
-          <IconWrapper bgColor="#FFF3E0">
-            <FaShoppingCart color="#F57C00" />
-          </IconWrapper>
-          <SummaryTitle>Total de Pedidos</SummaryTitle>
-          <SummaryValue>26</SummaryValue>
-        </SummaryCard>
-        <SummaryCard>
-          <IconWrapper bgColor="#EDE7F6">
-            <FaAward color="#673AB7" />
-          </IconWrapper>
-          <SummaryTitle>Nível do Cliente</SummaryTitle>
-          <SummaryValue>Bronze</SummaryValue>
-        </SummaryCard>
-      </SummarySection>
+            <SummarySection>
+              <SummaryCard>
+                <IconWrapper bgColor="#E0F2F1">
+                  <FaDollarSign color="#388E3C" />
+                </IconWrapper>
+                <SummaryTitle>Total de Vendas</SummaryTitle>
+                <SummaryValue>R$ 0,00</SummaryValue>
+              </SummaryCard>
+              <SummaryCard>
+                <IconWrapper bgColor="#FFF3E0">
+                  <FaShoppingCart color="#F57C00" />
+                </IconWrapper>
+                <SummaryTitle>Total de Pedidos</SummaryTitle>
+                <SummaryValue>0</SummaryValue>
+              </SummaryCard>
+              <SummaryCard>
+                <IconWrapper bgColor="#EDE7F6">
+                  <FaAward color="#673AB7" />
+                </IconWrapper>
+                <SummaryTitle>Nível do Cliente</SummaryTitle>
+                <SummaryValue>{client.nivelUSUARIO}</SummaryValue>
+              </SummaryCard>
+            </SummarySection>
 
             <OrderHistorySection>
               <OrderHistoryHeader>
                 <h2>Histórico de Pedidos</h2>
-                <div>
-                  <button>Selecionar Data</button>
-                  <button>Filtros</button>
-                </div>
+                <ButtonGroup>
+                  <StyledButton>Selecionar Data</StyledButton>
+                  <StyledButton>Filtros</StyledButton>
+                </ButtonGroup>
               </OrderHistoryHeader>
-              <OrderTable>
-                <thead>
-                  <TableRow>
-                    <TableCell>Pedido</TableCell>
-                    <TableCell>Produto</TableCell>
-                    <TableCell>Total</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Data</TableCell>
-                  </TableRow>
-                </thead>
-                <tbody>
-                  {paginatedOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>#{order.id}</TableCell>
-                      <TableCell style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center'}}>
-  <img src={order.image} alt={`Imagem do produto ${order.product}`} style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
-  <p style={{ fontSize: 16}}>{order.product}</p>
-</TableCell>
-
-                      {/* <TableCell>{order.product}</TableCell> */}
-                      <TableCell>{order.total}</TableCell>
-                      <TableCell><StatusBadge status={order.status}>{order.status}</StatusBadge></TableCell>
-                      <TableCell>{order.date}</TableCell>
+              {paginatedOrders.length > 0 ? (
+                <OrderTable>
+                  <thead>
+                    <TableRow>
+                      <TableCell>Pedido</TableCell>
+                      <TableCell>Produto</TableCell>
+                      <TableCell>Total</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Data</TableCell>
                     </TableRow>
-                  ))}
-                </tbody>
-              </OrderTable>
+                  </thead>
+                  <tbody>
+                    {paginatedOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>#{order.id}</TableCell>
+                        <TableCell style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center'}}>
+                          <img src={order.image} alt={`Imagem do produto ${order.product}`} style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+                          <p style={{ fontSize: 16 }}>{order.product}</p>
+                        </TableCell>
+                        <TableCell>{order.total}</TableCell>
+                        <TableCell><StatusBadge status={order.status}>{order.status}</StatusBadge></TableCell>
+                        <TableCell>{order.date}</TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </OrderTable>
+              ) : (
+                <p style={{ textAlign: 'center', color: '#999' }}>Nenhum pedido encontrado</p>
+              )}
               <Pagination>
                 {Array.from({ length: totalPages }, (_, index) => (
                   <PageButton
