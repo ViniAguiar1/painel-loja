@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -20,11 +20,11 @@ interface ProfitCardProps {
 }
 
 const ProfitCard: React.FC<ProfitCardProps> = ({ title, subtitle, value, percentage, comparisonText }) => {
-  const data = {
+  const [chartData, setChartData] = useState({
     labels: ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'],
     datasets: [
       {
-        data: [20, 25, 23, 28, 22, 24, 26],
+        data: [],
         borderColor: 'rgba(0, 200, 0, 1)', // Linha verde
         backgroundColor: 'rgba(0, 200, 0, 0.1)', // Fundo sutil
         fill: true,
@@ -33,7 +33,35 @@ const ProfitCard: React.FC<ProfitCardProps> = ({ title, subtitle, value, percent
         pointRadius: 0,
       },
     ],
-  };
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://api.spartacusprimetobacco.com.br/api/relatorios/total-lucro');
+        const data = await response.json();
+
+        setChartData({
+          labels: data.labels,
+          datasets: [
+            {
+              data: data.datasets[0].data,
+              borderColor: data.datasets[0].borderColor,
+              backgroundColor: data.datasets[0].backgroundColor,
+              fill: data.datasets[0].fill,
+              tension: data.datasets[0].tension,
+              borderWidth: data.datasets[0].borderWidth,
+              pointRadius: data.datasets[0].pointRadius,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Erro ao buscar os dados da API:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const options = {
     responsive: true,
@@ -84,7 +112,7 @@ const ProfitCard: React.FC<ProfitCardProps> = ({ title, subtitle, value, percent
       </div>
 
       <div style={{ height: '30px' }}>
-        <Line data={data} options={options} />
+        <Line data={chartData} options={options} />
       </div>
     </div>
   );

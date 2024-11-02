@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 ChartJS.register(
   CategoryScale,
@@ -24,11 +24,11 @@ ChartJS.register(
 const ActiveClientsCard = () => {
   const chartRef = useRef(null);
 
-  const data = {
+  const [chartData, setChartData] = useState({
     labels: ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'],
     datasets: [
       {
-        data: [30, 20, 25, 18, 22, 27, 24], // Dados para o gráfico
+        data: [],
         borderColor: 'red',
         backgroundColor: 'rgba(255, 0, 0, 0.1)',
         fill: true,
@@ -37,17 +37,45 @@ const ActiveClientsCard = () => {
         pointRadius: 0,
       },
     ],
-  };
+  });
+
+  useEffect(() => {
+    const fetchClientData = async () => {
+      try {
+        const response = await fetch('https://api.spartacusprimetobacco.com.br/api/relatorios/clientes');
+        const data = await response.json();
+
+        setChartData({
+          labels: data.labels,
+          datasets: [
+            {
+              data: data.datasets[0].data,
+              borderColor: data.datasets[0].borderColor,
+              backgroundColor: data.datasets[0].backgroundColor,
+              fill: data.datasets[0].fill,
+              tension: data.datasets[0].tension,
+              borderWidth: data.datasets[0].borderWidth,
+              pointRadius: data.datasets[0].pointRadius,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Erro ao buscar os dados da API:", error);
+      }
+    };
+
+    fetchClientData();
+  }, []);
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false, // Ocultar legenda para gráfico simples
+        display: false,
       },
       tooltip: {
-        enabled: false, // Desabilitar tooltip para uma exibição mais limpa
+        enabled: false,
       },
     },
     layout: {
@@ -58,10 +86,10 @@ const ActiveClientsCard = () => {
     },
     scales: {
       x: {
-        display: false, // Ocultar eixo X
+        display: false,
       },
       y: {
-        display: false, // Ocultar eixo Y
+        display: false,
       },
     },
   };
@@ -95,7 +123,7 @@ const ActiveClientsCard = () => {
       </div>
 
       <div style={{ height: '50px', marginTop: '10px' }}>
-        <Line ref={chartRef} data={data} options={options} />
+        <Line ref={chartRef} data={chartData} options={options} />
       </div>
     </div>
   );
