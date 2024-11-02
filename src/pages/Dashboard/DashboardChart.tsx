@@ -1,3 +1,5 @@
+import React, { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -9,70 +11,29 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { useRef } from 'react';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const DashboardChart = () => {
   const chartRef = useRef(null);
+  const [chartData, setChartData] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const data = {
-    labels: ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'],
-    datasets: [
-      {
-        label: 'Vendas',
-        data: [12, 19, 3, 5, 2, 3, 9],
-        borderColor: (context) => {
-          const chart = context.chart;
-          const { ctx, chartArea } = chart;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('https://api.spartacusprimetobacco.com.br/api/relatorios/total-vendas');
+        setChartData(response.data);
+        setLoading(false);
+      } catch (error) {
+        setError('Erro ao carregar dados');
+        setLoading(false);
+      }
+    };
 
-          if (!chartArea) {
-            return null;
-          }
-
-          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(0, 0, 255, 1)');
-          gradient.addColorStop(1, 'rgba(0, 0, 255, 0.5)');
-          return gradient;
-        },
-        backgroundColor: 'rgba(0, 0, 255, 0.1)',
-        fill: true,
-        tension: 0.4,
-        borderWidth: 3,
-        pointRadius: 0,
-      },
-      {
-        label: 'Custo',
-        data: [2, 3, 20, 5, 1, 4, 10],
-        borderColor: (context) => {
-          const chart = context.chart;
-          const { ctx, chartArea } = chart;
-
-          if (!chartArea) {
-            return null;
-          }
-
-          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(255, 0, 0, 1)');
-          gradient.addColorStop(1, 'rgba(255, 0, 0, 0.5)');
-          return gradient;
-        },
-        backgroundColor: 'rgba(255, 0, 0, 0.1)',
-        fill: true,
-        tension: 0.4,
-        borderWidth: 3,
-        pointRadius: 0,
-      },
-    ],
-  };
+    fetchData();
+  }, []);
 
   const options = {
     responsive: true,
@@ -114,9 +75,21 @@ const DashboardChart = () => {
     },
   };
 
+  if (loading) {
+    return <div>Carregando dados...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!chartData) {
+    return <div>Dados não disponíveis</div>;
+  }
+
   return (
-    <div style={{ height: '150px', width: '100%' }}> {/* Reduzi a altura para 150px */}
-      <Line ref={chartRef} data={data} options={options} />
+    <div style={{ height: '150px', width: '100%' }}>
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -20,20 +21,33 @@ interface SalesCardProps {
 }
 
 const SalesCard: React.FC<SalesCardProps> = ({ title, subtitle, value, percentage, comparisonText }) => {
-  const data = {
-    labels: ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'],
+  const [chartData, setChartData] = useState<any>({
+    labels: [],
     datasets: [
       {
-        data: [15, 10, 14, 12, 18, 14, 20], // Dados do gráfico de linha
-        borderColor: 'rgba(255, 0, 0, 1)', // Cor da linha em vermelho
-        backgroundColor: 'rgba(255, 0, 0, 0.1)', // Fundo sutil para o gráfico
+        data: [],
+        borderColor: 'rgba(255, 0, 0, 1)',
+        backgroundColor: 'rgba(255, 0, 0, 0.1)',
         fill: true,
         tension: 0.4,
         borderWidth: 2,
         pointRadius: 0,
       },
     ],
-  };
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('https://api.spartacusprimetobacco.com.br/api/relatorios/total-vendas');
+        setChartData(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const options = {
     responsive: true,
@@ -99,7 +113,7 @@ const SalesCard: React.FC<SalesCardProps> = ({ title, subtitle, value, percentag
         width: '100px', // Aumenta o tamanho do gráfico
         height: '60px', // Altura maior para destacar o gráfico
       }}>
-        <Line data={data} options={options} />
+        <Line data={chartData} options={options} />
       </div>
     </div>
   );

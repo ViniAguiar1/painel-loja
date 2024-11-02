@@ -18,6 +18,8 @@ import PendingClientsCard from './PendingClientsCard';
 import LowStockProductsCard from './LowStockProductsCard';
 import ScheduledExpensesCard from './ScheduledExpensesCard';
 import DeferredPaymentsCard from './DeferredPaymentsCard';
+import ExpenseStatusCard from './ExpenseStatusCard';
+import SalesLastHourCard from './SalesLastHourCard';
 
 const Dashboard = () => {
   return (
@@ -121,6 +123,15 @@ const Dashboard = () => {
         </Col>
         <Col > 
         <DeferredPaymentsCard />
+        </Col>
+        </Row>
+
+        <Row  className="pb-4">
+         <Col  xs={6} > 
+         <ExpenseStatusCard />
+        </Col>
+        <Col > 
+        <SalesLastHourCard />
         </Col>
         </Row>
 
