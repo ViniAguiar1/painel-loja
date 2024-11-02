@@ -212,25 +212,25 @@ const OthersRequest: React.FC = () => {
             <OrderDetailsGrid>
                 <OrderSummary>
                     <h2>
-                        Pedido #{orderDetails.codigoCARRINHO}
-                        <StatusBadge style={{ backgroundColor: '#FDF1E8', color: '#E46A11'}}>
+                        Pedido #{orderDetails.codigoCARRINHO || 'N/A'}
+                        <StatusBadge style={{ backgroundColor: orderDetails.statusCARRINHO ? '#28a745' : '#dc3545', color: '#fff' }}>
                             {orderDetails.statusCARRINHO ? 'Ativo' : 'Inativo'}
                         </StatusBadge>
                     </h2>
                     <DetailRow>
                         <FaCalendarAlt />
                         <span>Data de criação:</span>
-                        <strong>{moment(orderDetails.datacriacaoCARRINHO).format('DD MMM YYYY')}</strong>
+                        <strong>{orderDetails.datacriacaoCARRINHO ? moment(orderDetails.datacriacaoCARRINHO).format('DD MMM YYYY') : 'N/A'}</strong>
                     </DetailRow>
                     <DetailRow>
                         <FaCreditCard />
                         <span>Forma de Pagamento:</span>
-                        <strong>Visa</strong>
+                        <strong>{orderDetails.formaPagamentoCARRINHO || 'N/A'}</strong>
                     </DetailRow>
                     <DetailRow>
                         <FaShippingFast />
                         <span>Tipo de entrega:</span>
-                        <strong>Portaria</strong>
+                        <strong>{orderDetails.preferenciaCARRINHO || 'N/A'}</strong>
                     </DetailRow>
                 </OrderSummary>
 
@@ -239,17 +239,17 @@ const OthersRequest: React.FC = () => {
                     <DetailRow>
                         <FaUser />
                         <span>Cliente:</span>
-                        <strong>{orderDetails.nomeCARRINHO} {orderDetails.sobrenomeCARRINHO}</strong>
+                        <strong>{orderDetails.nomeCARRINHO || 'N/A'} {orderDetails.sobrenomeCARRINHO || ''}</strong>
                     </DetailRow>
                     <DetailRow>
                         <FaEnvelope />
                         <span>E-mail:</span>
-                        <strong>{orderDetails.emailCARRINHO}</strong>
+                        <strong>{orderDetails.emailCARRINHO || 'N/A'}</strong>
                     </DetailRow>
                     <DetailRow>
                         <FaPhoneAlt />
                         <span>Celular:</span>
-                        <strong>{orderDetails.areaTelefoneCARRINHO} {orderDetails.telefoneCARRINHO}</strong>
+                        <strong>({orderDetails.areaTelefoneCARRINHO || '00'}) {orderDetails.telefoneCARRINHO || '000000000'}</strong>
                     </DetailRow>
                 </CustomerInfo>
             </OrderDetailsGrid>
@@ -268,39 +268,30 @@ const OthersRequest: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
+                            {/* Preencha com os dados dos produtos, ou mostre valores padrão */}
                             <tr>
                                 <td>
-                                    <img src="https://acdn.mitiendanube.com/stores/001/876/620/products/camisa-retro-selecao-brasileira-brasil-copa-1998-remake-masculina-fan-amarela-home-titular-ronaldo-edmundo-taffarel-cafu-roberto-carlos-rivaldo-vini-jr-1-a1b9a31740fba03c0417194265327814-640-0.jpg" alt="Produto 1" />
+                                    <img src="https://via.placeholder.com/50" alt="Produto" />
                                     Nome do Produto
                                 </td>
-                                <td>302011</td>
-                                <td>200 g</td>
-                                <td>R$ 150,00</td>
-                                <td>R$ 150,00</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <img src="https://pbs.twimg.com/media/GQOFWYXW4AAOE0N.jpg" alt="Produto 2" />
-                                    Nome do Produto
-                                </td>
-                                <td>302012</td>
-                                <td>120 g</td>
-                                <td>R$ 150,00</td>
-                                <td>R$ 150,00</td>
+                                <td>SKU</td>
+                                <td>Quantidade</td>
+                                <td>R$ Preço</td>
+                                <td>R$ Total</td>
                             </tr>
                         </tbody>
                     </ProductTable>
                     <PriceTotal>
                         <p>Subtotal</p>
-                        <p>R$ 150,00</p>
+                        <p>{orderDetails.precoCARRINHO || '0,00'}</p>
                     </PriceTotal>
                     <PriceTotal>
                         <p>Frete</p>
-                        <p>R$ 15,00</p>
+                        <p>{orderDetails.freteCARRINHO || '0,00'}</p>
                     </PriceTotal>
                     <PriceTotal>
                         <strong>Total</strong>
-                        <strong>R$ 300,00</strong>
+                        <strong>{orderDetails.totalCARRINHO || '0,00'}</strong>
                     </PriceTotal>
                 </OrderItems>
 
@@ -309,20 +300,21 @@ const OthersRequest: React.FC = () => {
                         <SectionTitle>Endereço de Entrega</SectionTitle>
                         <DetailRow>
                             <FaMapMarkerAlt />
-                            <span>São Paulo | SP</span>
+                            <span>{orderDetails.localizacaoCARRINHO || 'Cidade não especificada'}</span>
                         </DetailRow>
-                        <p>Av Paulista, 1001</p>
-                        <p>CEP 01234-45</p>
+                        <p>{orderDetails.ruaCARRINHO || 'Rua não especificada'}, {orderDetails.numeroCARRINHO || 'N/A'} - {orderDetails.complementoCARRINHO || 'N/A'}</p>
+                        <p>CEP {orderDetails.cepCARRINHO || '00000-000'}</p>
                     </AddressInfo>
 
                     <StatusInfo>
                         <SectionTitle>Status do Pedido</SectionTitle>
+                        {/* Exibe status do pedido com valores padrão quando necessário */}
                         <StatusItem active>
                             <FaCheckCircle />
                             <div>
                                 <strong>Pedido</strong>
                                 <p>Seu pedido foi feito.</p>
-                                <small>12/12/2023, 03h00</small>
+                                <small>{moment(orderDetails.recebidoCARRINHO).format('DD/MM/YYYY, HH:mm') || 'N/A'}</small>
                             </div>
                         </StatusItem>
                         <StatusItem processing>
@@ -330,28 +322,23 @@ const OthersRequest: React.FC = () => {
                             <div>
                                 <strong>Processando pagamento</strong>
                                 <p>Estamos processando seu pedido</p>
-                                <small>12/12/2024, 03h15</small>
+                                <small>{moment(orderDetails.recebimentoCARRINHO).format('DD/MM/YYYY, HH:mm') || 'N/A'}</small>
                             </div>
                         </StatusItem>
                         <StatusItem>
                             <FaBox />
                             <div>
                                 <strong>Pacote</strong>
-                                <p>DD/MM/AA, 00:00</p>
-                            </div>
-                        </StatusItem>
-                        <StatusItem>
-                            <FaTruck />
-                            <div>
-                                <strong>Em transporte</strong>
-                                <p>DD/MM/AA, 00:00</p>
+                                <p>Preparando para envio</p>
+                                <small>N/A</small>
                             </div>
                         </StatusItem>
                         <StatusItem last>
-                            <FaCheckCircle />
+                            <FaTruck />
                             <div>
-                                <strong>Entrega</strong>
-                                <p>DD/MM/AA, 00:00</p>
+                                <strong>Em transporte</strong>
+                                <p>O pedido está a caminho</p>
+                                <small>N/A</small>
                             </div>
                         </StatusItem>
                     </StatusInfo>
