@@ -27,13 +27,13 @@ const SalesLastHourCard: React.FC = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: { enabled: false },
+      tooltip: { enabled: true }, // Habilita os tooltips
     },
     scales: {
       x: { display: false },
       y: { display: false },
     },
-  };
+  };  
 
   const statesData = [
     { state: 'São Paulo', sales: '30k', change: '25.8%', increase: true },

@@ -52,7 +52,11 @@ const AddressAndStatusContainer = styled.div`
 `;
 
 const AddressInfo = styled(Section)``;
-const StatusInfo = styled(Section)``;
+
+const StatusInfo = styled(Section)`
+    max-height: 300px; /* Limita a altura da seção de status */
+    overflow-y: auto; /* Adiciona rolagem vertical quando necessário */
+`;
 
 const SectionTitle = styled.h3`
     font-size: 16px;
@@ -181,24 +185,64 @@ const StatusItem = styled.div`
 const OthersRequest: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [orderDetails, setOrderDetails] = useState<any>(null);
+    const [orderStatus, setOrderStatus] = useState<any[]>([]);
 
     useEffect(() => {
-        if (id) {
-            const token = localStorage.getItem('token');
-            fetch(`https://api.spartacusprimetobacco.com.br/api/carrinhos/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
+        const fetchOrderDetails = async () => {
+            if (id) {
+                const token = localStorage.getItem('token');
+                try {
+                    const response = await fetch(`https://api.spartacusprimetobacco.com.br/api/carrinhos/${id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    setOrderDetails(data);
+                } catch (error) {
+                    console.error("Erro ao buscar detalhes do pedido:", error);
                 }
-            })
-            .then(response => response.json())
-            .then(data => setOrderDetails(data))
-            .catch(error => console.error("Erro ao buscar detalhes do pedido:", error));
-        }
+            }
+        };
+
+        const fetchOrderStatus = async () => {
+            if (id) {
+                try {
+                    const response = await fetch(`https://api.spartacusprimetobacco.com.br/api/carrinhos/status?codigoCARRINHO=${id}`);
+                    const data = await response.json();
+                    setOrderStatus(data);
+                } catch (error) {
+                    console.error("Erro ao buscar status do pedido:", error);
+                }
+            }
+        };
+
+        fetchOrderDetails();
+        fetchOrderStatus();
     }, [id]);
 
     if (!orderDetails) {
         return <p>Carregando...</p>;
     }
+
+    const getStatusIcon = (statusName) => {
+        switch (statusName) {
+            case "Pedido":
+                return <FaCheckCircle color="#4CAF50" />;
+            case "Processando pagamento":
+                return <MdPayment color="#ffc107" />;
+            case "Aguardando Aceite":
+                return <FaUser color="#888" />;
+            case "Em Separação":
+                return <FaBox color="#888" />;
+            case "Pacote":
+                return <FaBox color="#888" />;
+            case "A Enviar":
+                return <FaTruck color="#888" />;
+            case "Em Transporte":
+                return <FaTruck color="#4CAF50" />;
+            default:
+                return <FaBox color="#888" />;
+        }
+    };
 
     return (
         <OrderDetailsContainer>
@@ -268,7 +312,6 @@ const OthersRequest: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* Preencha com os dados dos produtos, ou mostre valores padrão */}
                             <tr>
                                 <td>
                                     <img src="https://via.placeholder.com/50" alt="Produto" />
@@ -308,39 +351,21 @@ const OthersRequest: React.FC = () => {
 
                     <StatusInfo>
                         <SectionTitle>Status do Pedido</SectionTitle>
-                        {/* Exibe status do pedido com valores padrão quando necessário */}
-                        <StatusItem active>
-                            <FaCheckCircle />
-                            <div>
-                                <strong>Pedido</strong>
-                                <p>Seu pedido foi feito.</p>
-                                <small>{moment(orderDetails.recebidoCARRINHO).format('DD/MM/YYYY, HH:mm') || 'N/A'}</small>
-                            </div>
-                        </StatusItem>
-                        <StatusItem processing>
-                            <MdPayment />
-                            <div>
-                                <strong>Processando pagamento</strong>
-                                <p>Estamos processando seu pedido</p>
-                                <small>{moment(orderDetails.recebimentoCARRINHO).format('DD/MM/YYYY, HH:mm') || 'N/A'}</small>
-                            </div>
-                        </StatusItem>
-                        <StatusItem>
-                            <FaBox />
-                            <div>
-                                <strong>Pacote</strong>
-                                <p>Preparando para envio</p>
-                                <small>N/A</small>
-                            </div>
-                        </StatusItem>
-                        <StatusItem last>
-                            <FaTruck />
-                            <div>
-                                <strong>Em transporte</strong>
-                                <p>O pedido está a caminho</p>
-                                <small>N/A</small>
-                            </div>
-                        </StatusItem>
+                        {orderStatus.map((status, index) => (
+                            <StatusItem 
+                                key={status.ID}
+                                active={status.nome === "Pedido"} 
+                                processing={status.nome === "Processando pagamento"}
+                                last={index === orderStatus.length - 1}
+                            >
+                                {getStatusIcon(status.nome)}
+                                <div>
+                                    <strong>{status.nome}</strong>
+                                    <p>{status.observacao}</p>
+                                    <small>{status.Data ? moment(status.Data).format('DD/MM/YYYY, HH:mm') : 'N/A'}</small>
+                                </div>
+                            </StatusItem>
+                        ))}
                     </StatusInfo>
                 </AddressAndStatusContainer>
             </WideRow>
