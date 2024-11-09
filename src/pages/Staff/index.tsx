@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { IoMdClose } from "react-icons/io";
+import { IoMdClose, IoMdLock } from "react-icons/io";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 
@@ -355,12 +355,18 @@ const Staff = () => {
                                 <TableCell>{staff.ativoTIPOUSUARIO ? "Sim" : "Não"}</TableCell>
                                 <TableCell>
                                     <IconsContainer>
-                                        <IconButton onClick={() => openModal(true, staff)}>
-                                            <FiEdit />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleDeleteStaff(staff.idTIPOUSUARIO)}>
-                                            <FiTrash />
-                                        </IconButton>
+                                        {staff.sistemaTIPOUSUARIO === 1 ? (
+                                            <IoMdLock size={18} color="#D02626" />
+                                        ) : (
+                                            <>
+                                                <IconButton onClick={() => openModal(true, staff)}>
+                                                    <FiEdit />
+                                                </IconButton>
+                                                <IconButton onClick={() => handleDeleteStaff(staff.idTIPOUSUARIO)}>
+                                                    <FiTrash />
+                                                </IconButton>
+                                            </>
+                                        )}
                                     </IconsContainer>
                                 </TableCell>
                             </TableRow>
