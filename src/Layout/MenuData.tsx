@@ -111,6 +111,13 @@ const menuItems = [
   },
   {
     type: "HASHMENU",
+    id: "cupom",
+    label: "Cupom",
+    icon: "ph-duotone ph-tag",
+    link: "/cupom",
+  },
+  {
+    type: "HASHMENU",
     id: "configuracoes",
     label: "Configurações",
     icon: "ph-duotone ph-gear",
@@ -118,4 +125,14 @@ const menuItems = [
   },
 ];
 
-export { menuItems };
+const menuFuncionarios = [
+  {
+    type: "HASHMENU",
+    id: "separacao-pedidos",
+    label: "Separação de Pedidos",
+    icon: "ph-duotone ph-list",
+    link: "/separacao-pedidos",
+  }
+]
+
+export { menuItems, menuFuncionarios };

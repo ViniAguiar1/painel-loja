@@ -10,6 +10,7 @@ import Usuarios from "../pages/Usuarios";
 import Links from "../pages/Links";
 import Configuracoes from "../pages/Configuracoes";
 import AddProduct from "../pages/Produtos/AddProduct";
+import Cupom from "../pages/Cupom";
 
 
 import LoginV1 from "../pages/Pages/Login";
@@ -48,6 +49,7 @@ const routes = [
     { path: "/saidas", component: <Saidas />},
     { path: "/envios", component: <Envios />},
     { path: "/add-product", component: <AddProduct /> },
+    { path: "/cupom", component: <Cupom /> },
     
 ];
 

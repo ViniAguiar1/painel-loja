@@ -138,6 +138,7 @@ const ConfiguracoesPage = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({});
+  const defaultAvatar = "https://cdn.pixabay.com/photo/2021/07/02/04/48/user-6380868_1280.png";
 
   useEffect(() => {
     const fetchConfiguracoes = async () => {
@@ -255,7 +256,7 @@ const ConfiguracoesPage = () => {
               <TableRow key={usuario.codigoUSUARIO}>
                 <TableCell>
                   <img
-                    src={usuario.imagemUSUARIO}
+                    src={defaultAvatar}
                     alt="Avatar"
                     style={{ marginRight: "10px", borderRadius: "50%", width: 50, height: 50 }}
                   />

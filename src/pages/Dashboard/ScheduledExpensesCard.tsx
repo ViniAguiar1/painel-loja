@@ -1,13 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const ScheduledExpensesCard: React.FC = () => {
-  const expenses = [
-    { name: 'Despesa', date: '19/05', amount: 'R$ 999.29' },
-    { name: 'Despesa', date: '12/05', amount: 'R$ 72.40' },
-    { name: 'Despesa', date: '11/05', amount: 'R$ 99.90' },
-    { name: 'Despesa', date: '10/05', amount: 'R$ 249.99' },
-    { name: 'Despesa', date: '05/05', amount: 'R$ 79.40' },
-  ];
+  const [totalExpenses, setTotalExpenses] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchScheduledExpenses = async () => {
+      try {
+        const response = await axios.get('https://api.spartacusprimetobacco.com.br/api/relatorios/despesas-agendadas');
+        setTotalExpenses(response.data.totalDespesasAgendadas);
+      } catch (error) {
+        console.error('Erro ao buscar despesas agendadas:', error);
+      }
+    };
+
+    fetchScheduledExpenses();
+  }, []);
 
   return (
     <div style={{
@@ -15,35 +23,17 @@ const ScheduledExpensesCard: React.FC = () => {
       borderRadius: '8px',
       padding: '20px',
       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      height: '350px', // Alinhado com a altura dos outros cards
       display: 'flex',
       flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '200px',
+      textAlign: 'center',
     }}>
-      <h4 style={{ fontSize: '16px', color: '#333', marginBottom: '10px' }}>Despesas agendadas</h4>
-      <div style={{ overflowY: 'auto', flexGrow: 1 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid #f0f0f0', color: '#6c757d', fontSize: '14px', textAlign: 'left' }}>
-              <th style={{ padding: '10px 0' }}>NOME</th>
-              <th style={{ padding: '10px 0' }}>DATA</th>
-              <th style={{ padding: '10px 0' }}>VALOR $$</th>
-            </tr>
-          </thead>
-          <tbody>
-            {expenses.map((expense, index) => (
-              <tr key={index} style={{
-                borderBottom: index === expenses.length - 1 ? 'none' : '1px solid #f0f0f0', // Remove a borda inferior na última linha
-                fontSize: '14px',
-                color: '#333',
-              }}>
-                <td style={{ padding: '15px 0' }}>{expense.name}</td>
-                <td style={{ padding: '15px 0' }}>{expense.date}</td>
-                <td style={{ padding: '15px 0' }}>{expense.amount}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <h4 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '10px' }}>Resumo das Despesas</h4>
+      <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
+        Total de Despesas: {totalExpenses !== null ? `R$ ${totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'Carregando...'}
+      </p>
     </div>
   );
 };

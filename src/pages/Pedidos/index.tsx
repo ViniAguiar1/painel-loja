@@ -6,7 +6,6 @@ import DatePicker from 'react-datepicker';
 import * as XLSX from 'xlsx';
 import 'react-datepicker/dist/react-datepicker.css';
 import moment from 'moment';
-import { useNavigate } from 'react-router-dom';
 
 interface Pedido {
     id: string;
@@ -21,66 +20,57 @@ interface Pedido {
     status: string;
 }
 
-const DEFAULT_IMAGE_URL = 'https://s3.wasabisys.com/mercadoblackmoney.bemarketplace.com.br/img/products/default.jpg';
-
 const PedidosPage: React.FC = () => {
-    const [data, setData] = useState<Pedido[]>([]);
-    const [filteredData, setFilteredData] = useState<Pedido[]>([]);
+    const [data, setData] = useState<any[]>([]);
+    const [filteredData, setFilteredData] = useState<any[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [perPage] = useState(10);
     const [activeFilter, setActiveFilter] = useState('Todos os pedidos');
     const [showDateModal, setShowDateModal] = useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState<[Date | null, Date | null]>([null, null]);
     const [filters, setFilters] = useState({ status: '', pagamento: '' });
-    const navigate = useNavigate();
+    const [selectedRows, setSelectedRows] = useState<Pedido[]>([]);
+    const [currentPedido, setCurrentPedido] = useState<Pedido | null>(null);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token'); // Obtém o token do localStorage
 
-        fetch("https://api.spartacusprimetobacco.com.br/api/carrinhos", {
+        fetch('http://192.168.15.35:8000/api/carrinhos', {
             headers: {
-                Authorization: `Bearer ${token}`
+                'Authorization': `Bearer ${token}`, // Adiciona o token ao cabeçalho da requisição
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro na autenticação');
             }
+            return response.json();
         })
-        .then(response => response.json())
-        .then(async (carrinhos: any[]) => {
-            const pedidos = await Promise.all(
-                carrinhos.map(async (carrinho) => {
-                    const usuarioResponse = await fetch(`https://api.spartacusprimetobacco.com.br/api/usuarios/${carrinho.usuarioCARRINHO}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    });
-                    const usuario = await usuarioResponse.json();
-
-                    return {
-                        id: carrinho.codigoCARRINHO.toString(),
-                        produto: carrinho.tituloCARRINHO,
-                        imagem: carrinho.imagem || DEFAULT_IMAGE_URL,
-                        outrosProdutos: carrinho.linhaCARRINHO,
-                        data: carrinho.datacriacaoCARRINHO,
-                        cliente: `${usuario.nome} ${usuario.sobrenome}`,
-                        email: usuario.email,
-                        total: carrinho.totalCARRINHO,
-                        pagamento: carrinho.linkPagamentoCARRINHO,
-                        status: carrinho.statusCARRINHO ? 'Ativo' : 'Inativo',
-                    };
-                })
-            );
-            setData(pedidos);
-            setFilteredData(pedidos);
+        .then((data: any[]) => {
+            const mappedData = data.map(carrinho => ({
+                id: carrinho.codigoCARRINHO,
+                produto: carrinho.tituloCARRINHO,
+                imagem: '', // Placeholder se não houver imagem na API
+                outrosProdutos: 0, // Ajuste conforme a necessidade
+                data: carrinho.datacriacaoCARRINHO,
+                cliente: `${carrinho.nomeCARRINHO} ${carrinho.sobrenomeCARRINHO}`,
+                email: carrinho.emailCARRINHO,
+                total: carrinho.totalCARRINHO,
+                pagamento: carrinho.linkPagamentoCARRINHO ? 'Pago' : 'Pendente',
+                status: carrinho.statusCARRINHO === 0 ? 'Pendente' : 'Completo',
+            }));
+            setData(mappedData);
+            setFilteredData(mappedData);
         })
-        .catch(error => console.error("Erro ao buscar pedidos:", error));
+        .catch(error => console.error('Erro ao buscar os dados:', error));
     }, []);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
-
-    const handleRowClick = (id: string) => {
-        navigate(`/others-request/${id}`);
-    };    
 
     const handleFilterClick = (filter: string) => {
         setActiveFilter(filter);
@@ -126,17 +116,58 @@ const PedidosPage: React.FC = () => {
         setShowFilterModal(false);
     };
 
+    const handleSelectAllRows = () => {
+        if (selectedRows.length === filteredData.length) {
+            setSelectedRows([]);
+        } else {
+            setSelectedRows(filteredData);
+        }
+    };
+
+    const handleRowSelect = (row: Pedido) => {
+        if (selectedRows.includes(row)) {
+            setSelectedRows(selectedRows.filter(r => r !== row));
+        } else {
+            setSelectedRows([...selectedRows, row]);
+        }
+    };
+
     const exportToExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(filteredData);
+        const worksheet = XLSX.utils.json_to_sheet(selectedRows);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Pedidos');
         XLSX.writeFile(workbook, 'pedidos.xlsx');
     };
 
+    const handleView = (row: Pedido) => {
+        setCurrentPedido(row);
+        setShowViewModal(true);
+    };
+
+    const handleEdit = (row: Pedido) => {
+        setCurrentPedido(row);
+        setShowEditModal(true);
+    };
+
+    const handleCloseViewModal = () => {
+        setShowViewModal(false);
+        setCurrentPedido(null);
+    };
+
+    const handleCloseEditModal = () => {
+        setShowEditModal(false);
+        setCurrentPedido(null);
+    };
+
     const columns: TableColumn<Pedido>[] = [
         {
+            name: <input type="checkbox" checked={selectedRows.length === filteredData.length} onChange={handleSelectAllRows} />,
+            cell: row => <input type="checkbox" checked={selectedRows.includes(row)} onChange={() => handleRowSelect(row)} />,
+            width: '50px',
+        },
+        {
             name: <span style={{ color: 'red' }}>Ordem</span>,
-            selector: row => <span style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleRowClick(row.id)}>{row.id}</span>,
+            selector: row => <span style={{ color: 'red' }}>{row.id}</span>,
             sortable: true,
             width: '100px',
         },
@@ -201,18 +232,46 @@ const PedidosPage: React.FC = () => {
                 </span>
             ),
             width: '150px',
+        },        
+        {
+            name: 'Ação',
+            cell: row => (
+                <div className="d-flex">
+                    <Button variant="link" size="sm" onClick={() => handleView(row)}>
+                        <FaEye style={{ color: 'rgba(0, 0, 0, 0.7)' }} />
+                    </Button>
+                    <Button variant="link" size="sm" onClick={() => handleEdit(row)}>
+                        <FaPencilAlt style={{ color: 'rgba(0, 0, 0, 0.7)' }} />
+                    </Button>
+                </div>
+            ),
+            width: '100px',
         },
     ];
 
+    const paginatedData = filteredData.slice((currentPage - 1) * perPage, currentPage * perPage);
+
     return (
         <div style={{ padding: '20px' }}>
-            <h1>Pedidos</h1>
-            <Breadcrumb>
-                <Breadcrumb.Item href="#">Dashboard</Breadcrumb.Item>
-                <Breadcrumb.Item active>Pedidos</Breadcrumb.Item>
-            </Breadcrumb>
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <div>
+                    <h1>Pedidos</h1>
+                    <Breadcrumb>
+                        <Breadcrumb.Item href="#">Dashboard</Breadcrumb.Item>
+                        <Breadcrumb.Item active>Pedidos</Breadcrumb.Item>
+                    </Breadcrumb>
+                </div>
+                <div className="d-flex">
+                    <Button variant="warning" className="me-2" onClick={exportToExcel}>
+                        <FaDownload className="me-1" /> Exportar
+                    </Button>
+                    <Button variant="danger">
+                        <FaPlus className="me-1" /> Adicionar Pedido
+                    </Button>
+                </div>
+            </div>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <div className="d-flex">
                     {['Todos os pedidos', '12 meses', '30 dias', '7 dias', '24 horas'].map((filter) => (
                         <Button
                             key={filter}
@@ -233,22 +292,19 @@ const PedidosPage: React.FC = () => {
                     </Button>
                 </div>
             </div>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <Button variant="warning" className="me-2" onClick={exportToExcel}>
-                    <FaDownload className="me-1" /> Exportar
-                </Button>
-                <Button variant="danger">
-                    <FaPlus className="me-1" /> Adicionar Pedido
-                </Button>
-            </div>
             <DataTable
                 columns={columns}
-                data={filteredData.slice((currentPage - 1) * perPage, currentPage * perPage)}
+                data={paginatedData}
                 pagination
                 paginationServer
                 paginationTotalRows={filteredData.length}
                 paginationDefaultPage={currentPage}
                 onChangePage={handlePageChange}
+                paginationComponentOptions={{
+                    rowsPerPageText: 'Linhas por página',
+                    rangeSeparatorText: 'de',
+                    noRowsPerPage: true,
+                }}
                 paginationRowsPerPageOptions={[perPage]}
                 className="rounded border"
                 noHeader
@@ -309,8 +365,10 @@ const PedidosPage: React.FC = () => {
                                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                             >
                                 <option value="">Todos</option>
-                                <option value="Ativo">Ativo</option>
-                                <option value="Inativo">Inativo</option>
+                                <option value="Processando">Processando</option>
+                                <option value="Enviado">Enviado</option>
+                                <option value="Entregue">Entregue</option>
+                                <option value="Cancelado">Cancelado</option>
                             </Form.Control>
                         </Form.Group>
                         <Form.Group controlId="pagamento" className="mt-3">
@@ -338,22 +396,97 @@ const PedidosPage: React.FC = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            {/* Modal de visualizar pedido */}
+            <Modal show={showViewModal} onHide={handleCloseViewModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Visualizar Pedido</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {currentPedido && (
+                        <div>
+                            <p><strong>Ordem:</strong> {currentPedido.id}</p>
+                            <p><strong>Produto:</strong> {currentPedido.produto}</p>
+                            <p><strong>Data:</strong> {currentPedido.data}</p>
+                            <p><strong>Cliente:</strong> {currentPedido.cliente}</p>
+                            <p><strong>Total:</strong> {currentPedido.total}</p>
+                            <p><strong>Pagamento:</strong> {currentPedido.pagamento}</p>
+                            <p><strong>Status:</strong> {currentPedido.status}</p>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseViewModal}>
+                        Fechar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal de editar pedido */}
+            <Modal show={showEditModal} onHide={handleCloseEditModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Editar Pedido</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {currentPedido && (
+                        <Form>
+                            <Form.Group controlId="produto">
+                                <Form.Label>Produto</Form.Label>
+                                <Form.Control type="text" defaultValue={currentPedido.produto} />
+                            </Form.Group>
+                            <Form.Group controlId="data" className="mt-3">
+                                <Form.Label>Data</Form.Label>
+                                <Form.Control type="date" defaultValue={currentPedido.data} />
+                            </Form.Group>
+                            <Form.Group controlId="cliente" className="mt-3">
+                                <Form.Label>Cliente</Form.Label>
+                                <Form.Control type="text" defaultValue={currentPedido.cliente} />
+                            </Form.Group>
+                            <Form.Group controlId="total" className="mt-3">
+                                <Form.Label>Total</Form.Label>
+                                <Form.Control type="text" defaultValue={currentPedido.total} />
+                            </Form.Group>
+                            <Form.Group controlId="pagamento" className="mt-3">
+                                <Form.Label>Pagamento</Form.Label>
+                                <Form.Control type="text" defaultValue={currentPedido.pagamento} />
+                            </Form.Group>
+                            <Form.Group controlId="status" className="mt-3">
+                                <Form.Label>Status</Form.Label>
+                                <Form.Control as="select" defaultValue={currentPedido.status}>
+                                    <option value="Processando">Processando</option>
+                                    <option value="Enviado">Enviado</option>
+                                    <option value="Entregue">Entregue</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                </Form.Control>
+                            </Form.Group>
+                        </Form>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseEditModal}>
+                        Fechar
+                    </Button>
+                    <Button variant="primary">
+                        Salvar Alterações
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };
 
 const getStatusColor = (status: string) => {
     switch (status) {
+        case 'Pendente':
+            return 'warning'; // Altere para a cor desejada, como 'warning' para amarelo
+        case 'Completo':
+            return 'success'; // Altere para 'success' para verde, ou outra cor desejada
         case 'Processando':
-            return 'warning';
-        case 'Enviado':
-            return 'info';
-        case 'Entregue':
-            return 'success';
+            return 'info'; // Cor para status "Processando", caso exista
         case 'Cancelado':
-            return 'danger';
+            return 'danger'; // Cor para "Cancelado", como vermelho
         default:
-            return 'secondary';
+            return 'secondary'; // Cor padrão caso nenhum dos casos acima seja atendido
     }
 };
 

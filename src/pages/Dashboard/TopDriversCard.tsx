@@ -1,13 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+interface Driver {
+  motorista: string;
+  totalEntregas: number;
+}
 
 const TopDriversCard: React.FC = () => {
-  const drivers = [
-    { position: 1, name: 'Carlos', status: 56, total: 'R$ 4.5k' },
-    { position: 2, name: 'Renan', status: 51, total: 'R$ 4.2k' },
-    { position: 3, name: 'Fernando', status: 45, total: 'R$ 3.5k' },
-    { position: 4, name: 'Matheus', status: 43, total: 'R$ 3.1k' },
-    { position: 5, name: 'Lucas', status: 23, total: 'R$ 400' },
-  ];
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+
+  useEffect(() => {
+    const fetchDrivers = async () => {
+      try {
+        const response = await axios.get('https://api.spartacusprimetobacco.com.br/api/relatorios/top-motoristas');
+        setDrivers(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar os motoristas:', error);
+      }
+    };
+    
+    fetchDrivers();
+  }, []);
 
   return (
     <div style={{
@@ -15,7 +28,7 @@ const TopDriversCard: React.FC = () => {
       borderRadius: '8px',
       padding: '20px',
       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      height: '350px', // Alinhado com a altura do FreightSummaryCard e outros cards
+      height: '350px',
       display: 'flex',
       flexDirection: 'column',
     }}>
@@ -25,19 +38,17 @@ const TopDriversCard: React.FC = () => {
           <tr style={{ borderBottom: '2px solid #f0f0f0', color: '#6c757d', fontSize: '14px', textAlign: 'left' }}>
             <th style={{ padding: '10px 0' }}>POSIÇÃO</th>
             <th style={{ padding: '10px 0' }}>NOME</th>
-            <th style={{ padding: '10px 0' }}>STATUS</th>
-            <th style={{ padding: '10px 0' }}>TOTAL</th>
+            <th style={{ padding: '10px 0' }}>TOTAL ENTREGAS</th>
           </tr>
         </thead>
         <tbody>
           {drivers.map((driver, index) => (
             <tr key={index} style={{ borderBottom: '1px solid #f0f0f0', fontSize: '14px', color: '#333' }}>
               <td style={{ padding: '15px 0', display: 'flex', alignItems: 'center' }}>
-                #{driver.position} <span style={{ marginLeft: '5px' }}>🏆</span>
+                #{index + 1} <span style={{ marginLeft: '5px' }}>🏆</span>
               </td>
-              <td style={{ padding: '15px 0' }}>{driver.name}</td>
-              <td style={{ padding: '15px 0' }}>{driver.status}</td>
-              <td style={{ padding: '15px 0' }}>{driver.total}</td>
+              <td style={{ padding: '15px 0' }}>{driver.motorista}</td>
+              <td style={{ padding: '15px 0' }}>{driver.totalEntregas}</td>
             </tr>
           ))}
         </tbody>

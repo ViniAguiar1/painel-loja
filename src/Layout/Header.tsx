@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch } from 'react-redux';
 import { logout } from '../toolkit/authSlice'; // Importa a ação de logout 
-import logoDark from "../assets/images/logo-dark.svg";
-import logoLight from "../assets/images/logo-white.svg"; 
+import logoDark from "../../public/assets/logo.png";
+import logoLight from "../../public/assets/logo.png"; 
 import SimpleBar from "simplebar-react";
 import { menuItems } from "./MenuData";
 import NestedMenu from "./NestedMenu";
@@ -14,7 +14,9 @@ const Header = ({ themeMode }: any) => {
   const dispatch = useDispatch();
   const [userName, setUserName] = useState<string>("");
   const [userStaff, setUserStaff] = useState<string>("");
-  const [avatar1, setAvatar1] = useState<string>("");
+  // const [avatar1, setAvatar1] = useState<string>("");
+
+  const defaultAvatar = "https://cdn.pixabay.com/photo/2021/07/02/04/48/user-6380868_1280.png";
   
 
   // Função para pegar o nome do usuário do token
@@ -24,7 +26,6 @@ const Header = ({ themeMode }: any) => {
       const decodedToken = parseJwt(token);
       setUserName(decodedToken?.nome || 'Usuário'); // Ajuste o nome de acordo com o seu token
       setUserStaff(decodedToken?.cargo || 'Cargo'); // Ajuste o nome de acordo com o seu token
-      setAvatar1(decodedToken?.imagem); // Ajuste o nome de acordo com o seu token
       
     }
   }, []);
@@ -43,12 +44,17 @@ const Header = ({ themeMode }: any) => {
           <div className="m-header">
             <Link to="/" className="b-brand text-primary">
               {themeMode === "dark" ?
-                <img src={logoLight} alt="logo" className="logo-lg landing-logo" />
+                <img style={{
+                  width: "60px",
+                  height: "60px",
+                }} src={logoLight} alt="logo" className="logo-lg landing-logo" />
                 :
-                <img src={logoDark} alt="logo" className="logo-lg landing-logo" />
+                <img style={{
+                  width: "60px",
+                  height: "60px",
+                }} src={logoDark} alt="logo" className="logo-lg landing-logo" />
               }
               <span className="badge bg-brand-color-2 rounded-pill ms-2 theme-version">
-                v1.2.4
               </span>
             </Link>
           </div>
@@ -63,7 +69,7 @@ const Header = ({ themeMode }: any) => {
               <div className="d-flex align-items-center">
                 <div className="flex-shrink-0">
                   <img
-                    src={avatar1}
+                    src={defaultAvatar}
                     alt="user-image"
                     className="user-avtar wid-45 rounded-circle"
                     width={45}
@@ -88,10 +94,10 @@ const Header = ({ themeMode }: any) => {
                       </Dropdown.Toggle>
                       <Dropdown.Menu>
                         <ul>
-                          <li><Dropdown.Item className="pc-user-links">
+                          {/* <li><Dropdown.Item className="pc-user-links">
                             <i className="ph-duotone ph-user"></i>
                             <span>Meu Perfil</span>
-                          </Dropdown.Item></li>
+                          </Dropdown.Item></li> */}
                            
                           <li><Dropdown.Item className="pc-user-links" onClick={handleLogout}>
                             <i className="ph-duotone ph-power"></i>

@@ -168,10 +168,10 @@ const ClientesPage: React.FC = () => {
             <Breadcrumb>Dashboard {'>'} Listagem de Clientes</Breadcrumb>
             <Header>
                 <SearchBar placeholder="Procurar cliente..." value={searchTerm} onChange={handleSearch} />
-                <Actions>
+                {/* <Actions>
                     <Button>Exportar</Button>
                     <AddClientButton>+ Adicionar</AddClientButton>
-                </Actions>
+                </Actions> */}
             </Header>
             <Header style={{marginTop:30, marginBottom:30}}>
                 <div style={{ display: 'flex', gap: '10px' }}>

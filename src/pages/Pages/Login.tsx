@@ -7,6 +7,7 @@ import { parseJwt  } from '../../services/jwtService';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card } from 'react-bootstrap';
 import authlogin from '../../assets/images/authentication/img-auth-login.png'; 
+import logo from '../../../public/assets/images/logo.png';
 
 const LoginV1 = () => {
   const [email, setEmail] = useState('');
@@ -44,7 +45,7 @@ const LoginV1 = () => {
             <Card className="my-5">
               <Card.Body>
                 <div className="text-center">
-                  <img src={authlogin} alt="images" className="img-fluid mb-3" />
+                  <img src="../../../public/assets/logo.png" style={{ width: '8rem', height: '8rem' }} alt="images" className="img-fluid mb-3" />
                   <h4 className="f-w-500 mb-1">Logue com seu email</h4>
                   <p className="mb-3">Não tem uma conta? <Link to="/register" className="link-primary ms-1">Criar Conta</Link></p>
                 </div>
